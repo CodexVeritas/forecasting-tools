@@ -9,6 +9,12 @@ Last Update: Nov 3 2024
 # Quick Install
 Install this package with `pip install forecasting-tools`
 
+If you want to use advanced SmartSearcher functionality, you might also need to run:
+```bash
+playwright install
+playwright install-deps
+```
+
 # Overview
 Demo website: https://mokoresearch.streamlit.app/
 

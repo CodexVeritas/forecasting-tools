@@ -127,7 +127,9 @@ class ReportDisplayer:
         cls, tab: DeltaGenerator, question: BinaryQuestion
     ) -> None:
         with tab:
-            st.write(f"**Question Text:** {question.question_text}")
+            st.write(
+                f"**Question Text:** {cls.clean_markdown(question.question_text)}"
+            )
             st.write(
                 f"**Resolution Criteria:** {cls.clean_markdown(question.resolution_criteria or 'None')}"
             )

@@ -7,7 +7,9 @@ async def test_get_screenshot_as_file() -> None:
     url_scraper = UrlScraper()
     test_url = "https://example.com"
 
-    screenshot_file = await url_scraper.get_screenshot_of_url_as_file(test_url)
+    screenshot_file = await url_scraper.get_screenshot_of_url_as_image(
+        test_url
+    )
     assert isinstance(screenshot_file, Image.Image)
     assert screenshot_file.width > 0
     assert screenshot_file.height > 0

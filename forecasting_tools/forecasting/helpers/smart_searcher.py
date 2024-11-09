@@ -16,14 +16,13 @@ from forecasting_tools.ai_models.exa_searcher import (
     ExaSearcher,
     SearchInput,
 )
-from forecasting_tools.forecasting.helpers.configured_llms import (
-    BasicLlm,
-    VisionData,
-    VisionLlm,
-)
+from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
 from forecasting_tools.forecasting.helpers.url_scraper import UrlScraper
 from forecasting_tools.forecasting.helpers.works_cited_creator import (
     WorksCitedCreator,
+)
+from forecasting_tools.util.async_batching import (
+    run_coroutines_while_removing_and_logging_exceptions,
 )
 from forecasting_tools.util.jsonable import Jsonable
 
@@ -51,24 +50,23 @@ class SmartSearcher(OutputsText, AiModel):
         include_works_cited_list: bool = False,
         use_brackets_around_citations: bool = True,
         num_searches_to_run: int = 2,
-        num_sites_to_screenshot: int = 1,
+        num_sites_to_deep_dive: int = 0,
         num_sites_per_search: int = 10,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         assert 0 <= temperature <= 1, "Temperature must be between 0 and 1"
         assert (
-            num_sites_to_screenshot >= 1
-        ), "Number of sites to screenshot must be at least 1"
+            num_searches_to_run >= 1
+        ), "Number of searches to run must be at least 1"
         assert (
             num_sites_per_search >= 1
         ), "Number of sites per search must be at least 1"
         assert (
-            num_searches_to_run >= 1
-        ), "Number of searches to run must be at least 1"
-        assert (
-            0 <= num_sites_to_screenshot <= 1
-        ), "Number of sites to screenshot must be between 0 and 10"
+            0
+            <= num_sites_to_deep_dive
+            <= num_sites_per_search * num_searches_to_run
+        ), f"Number of sites to screenshot must be at least 0 and at most {num_sites_per_search * num_searches_to_run}"
         self.temperature = temperature
         self.num_quotes_to_evaluate_from_search = 15
         self.number_of_searches_to_run = num_searches_to_run
@@ -80,7 +78,7 @@ class SmartSearcher(OutputsText, AiModel):
         self.llm = BasicLlm(temperature=temperature)
         self.include_works_cited_list = include_works_cited_list
         self.use_citation_brackets = use_brackets_around_citations
-        self.num_sites_to_screenshot = num_sites_to_screenshot
+        self.num_sites_to_screenshot = num_sites_to_deep_dive
 
     async def invoke(self, prompt: str) -> str:
         logger.debug(f"Running search for prompt: {prompt}")
@@ -128,11 +126,23 @@ class SmartSearcher(OutputsText, AiModel):
             - What are some possible search queries and strategies that would be useful?
             - What are the aspects of the question that are most important? Are there multiple aspects?
             - Where is the information you need likely to be found or what will good sources likely contain in them?
+                - Wikipedia is good for lists of things and events
+                - FRED (Economic Research at the St. Louis Fed) is good for economic data
+                - Our World in Data
+                - OECD Stats
+                - UN Data
+                - Data.gov
+                - Yahoo Finance
+                - Bureau of Economic Analysis
+                - Consider things specific to the area you are researching
             - Would it already be at the top of the search results, or should you filter for it?
-            - What filters would help you achieve this to increase the information density of the results?
+            - What filters would help you achieve this to increase the information density of the results? Consider:
+                - Please only use the additional search fields ONLY IF it would return useful results or you are specifically instructed to do so.
+                - Unless you have a very specific site in mind, or a have a more than 2 queries, you should probably only use the date filter
+                - Only use the date filter if it makes sense to do so. Don't unnecessarily exclude older content.
+                - Consider if you can get the same results by putting the keywords in the search query instead (since in may ways this acts as a filter even if its not explicit)
+                - Please don't put anything in the highlight query unless requested to do so.
             - You have limited searches, which approaches would be highest priority?
-            Please only use the additional search fields ONLY IF it would return useful results.
-            Don't unnecessarily constrain results.
             Remember today is {datetime.now().strftime("%Y-%m-%d")}.
 
             {self.llm.get_schema_format_instructions_for_pydantic_type(SearchInput)}
@@ -180,83 +190,70 @@ class SmartSearcher(OutputsText, AiModel):
             logger.warning(
                 f"Couldn't find the number of quotes asked for. Found {len(deduplicated_quotes)} quotes, but need {self.num_quotes_to_evaluate_from_search} quotes"
             )
+
         most_relevant_quotes = deduplicated_quotes[
             : self.num_quotes_to_evaluate_from_search
         ]
+        logger.info(
+            f"Found {len(deduplicated_quotes)} quotes and "
+            f"{len(set([quote.source.url for quote in deduplicated_quotes]))} unique urls and "
+            f"filtering for top {self.num_quotes_to_evaluate_from_search} quotes"
+        )
         return most_relevant_quotes
 
     async def __get_image_descriptions(
         self, quotes: list[ExaHighlightQuote], prompt: str
     ) -> list[ScreenshotDescription]:
-        url_scraper = UrlScraper()
-        vision_llm = VisionLlm()
-        screenshot_descriptions = []
+        if self.num_sites_to_screenshot == 0:
+            return []
 
         selected_urls = await self.__decide_on_sources_to_screenshot(
             quotes, prompt
         )
 
-        for url in selected_urls:
-            try:
-                image_data = await url_scraper.get_screenshot_of_url_as_base64(
-                    url
-                )
-                vision_prompt = clean_indents(
-                    f"""
-                    You have been given the following instructions. Instructions are included between <><><><><><><><><><><><> tags.
-
-                    <><><><><><>START INSTRUCTIONS<><><><><><>
-                    {prompt}
-                    <><><><><><>END INSTRUCTIONS<><><><><><>
-
-                    You are looking at a screenshot of a webpage that may contain relevant information for these instructions.
-                    Please describe what you see in this webpage screenshot, focusing on the information that will help you to answer the instructions.
-                    If you are describing the graph, please give specifics about the data displayed
-                    - Mention a couple of data points you can see throughout the graph
-                    - Give an assessment of general trends of the data.
-                    - Please note when you are estimating versus when you can clearly see the value of a point on the graph
-                    Give a paragraph long description
-                    """
-                )
-                description = await vision_llm.invoke(
-                    VisionData(
-                        prompt=vision_prompt,
-                        b64_image=image_data,
-                        image_resolution="high",
-                    )
-                )
-                description = description.replace("\n", " ")
-                matching_source = next(
-                    (quote for quote in quotes if quote.source.url == url),
-                    None,
-                )
-                screenshot_descriptions.append(
-                    ScreenshotDescription(
-                        image_description=description,
-                        url=url,
-                        image_data=image_data,
-                        title=(
-                            matching_source.source.title
-                            if matching_source
-                            else None
-                        ),
-                        readable_publish_date=(
-                            matching_source.source.readable_publish_date
-                            if matching_source
-                            else None
-                        ),
-                    )
-                )
-                logger.info(f"Got screenshot description for url {url}")
-            except Exception as e:
-                logger.warning(f"Failed to get screenshot for {url}: {str(e)}")
-                continue
-
+        tasks = [
+            self._get_screenshot_descriptions_for_url(url, prompt, quotes)
+            for url in selected_urls
+        ]
+        screenshot_descriptions, _ = (
+            run_coroutines_while_removing_and_logging_exceptions(tasks)
+        )
         return screenshot_descriptions
+
+    async def _get_screenshot_descriptions_for_url(
+        self, url: str, prompt: str, quotes: list[ExaHighlightQuote]
+    ) -> ScreenshotDescription:
+        url_scraper = UrlScraper()
+        image_data = await url_scraper.get_screenshot_of_url_as_base64(url)
+        description = await UrlScraper.get_summary_of_screenshot(
+            image_data, prompt
+        )
+        description = description.replace("\n", " ")
+
+        matching_quote = next(
+            (quote for quote in quotes if quote.source.url == url),
+            None,
+        )
+        matching_source = matching_quote.source if matching_quote else None
+        screenshot_description = ScreenshotDescription(
+            image_description=description,
+            url=url,
+            image_data=image_data,
+            title=(matching_source.title if matching_source else None),
+            readable_publish_date=(
+                matching_source.readable_publish_date
+                if matching_source
+                else None
+            ),
+        )
+        logger.info(f"Got screenshot description for url {url}")
+        return screenshot_description
 
     async def __decide_on_sources_to_screenshot(
         self, quotes: list[ExaHighlightQuote], prompt: str
     ) -> list[str]:
+        if self.num_sites_to_screenshot == 0:
+            return []
         # TODO: Make sure that all the urls are unique
         formatted_sources = ""
         for i, quote in enumerate(quotes):
@@ -281,6 +278,8 @@ class SmartSearcher(OutputsText, AiModel):
 
             Walk through your reason step by step then give your final answer.
             Return the urls of the best websites to screenshot as a list of strings like this: ["https://www.website.com/article1", "https://www.placeholder.com"]
+            Remember, pick {self.num_sites_to_screenshot} sources. Pick all of them if there are only {self.num_sites_to_screenshot} sources.
+            You HAVE to pick {self.num_sites_to_screenshot} sources. Even if you just need one source, please pick more (you may be surprised at what you can find)
             """
         )
 
@@ -289,7 +288,7 @@ class SmartSearcher(OutputsText, AiModel):
         )
         assert (
             len(selected_urls) == self.num_sites_to_screenshot
-        ), f"Expected {self.num_sites_to_screenshot} sources to be chosen, but the AI chose {len(selected_urls)}"
+        ), f"Expected {self.num_sites_to_screenshot} sources to be chosen, but the AI chose {len(selected_urls)}. There were {len(quotes)} quotes and {len(set([quote.source.url for quote in quotes]))} unique urls"
         logger.info(
             f"Chose these sources for deep dives: {[url for url in selected_urls]}"
         )

@@ -22,3 +22,7 @@ source ../.venv/bin/activate
 
 # Show which Python interpreter is being used
 which python
+
+# Install playwright
+playwright install
+playwright install-deps

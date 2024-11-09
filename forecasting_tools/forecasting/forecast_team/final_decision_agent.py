@@ -154,9 +154,7 @@ class FinalDecisionAgent:
         summary_markdown = await model.invoke(prompt)
         cleaned_summary_markdown = strip_code_block_markdown(summary_markdown)
         self.__research_summary = cleaned_summary_markdown
-        logger.info(
-            f"Made research summary: {cleaned_summary_markdown[:100]}..."
-        )
+        logger.info("Made research summary for final decision agent")
         return cleaned_summary_markdown
 
     async def __create_unified_explanation(

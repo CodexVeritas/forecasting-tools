@@ -64,9 +64,19 @@ async def test_ask_question_empty_prompt() -> None:
 
 async def test_screenshot_question() -> None:
     with MonetaryCostManager() as cost_manager:
-        searcher = SmartSearcher(num_sites_to_screenshot=1)
-        question = "When was the most noticeable recent dip in the graph from https://fred.stlouisfed.org/series/GDPC1? Say 0 if you do not know."
+        searcher = SmartSearcher(num_sites_to_deep_dive=2)
+        question = "When was the most noticeable recent dip in the graph from https://fred.stlouisfed.org/series/GDPC1? Say 0 if you do not know. Please search specifically for the site itself."
         result = await searcher.invoke(question)
         logger.info(f"Result: {result}")
         logger.info(f"Cost: {cost_manager.current_usage}")
         assert "2020" in result
+
+
+@pytest.mark.skip("Run this when needed as it's purely a qualitative test")
+async def test_screenshot_question_2() -> None:
+    with MonetaryCostManager() as cost_manager:
+        searcher = SmartSearcher(num_sites_to_deep_dive=2)
+        question = "Please tell me about the recent trends in the Federal Funds Effective Rate."
+        result = await searcher.invoke(question)
+        logger.info(f"Result: {result}")
+        logger.info(f"Cost: {cost_manager.current_usage}")

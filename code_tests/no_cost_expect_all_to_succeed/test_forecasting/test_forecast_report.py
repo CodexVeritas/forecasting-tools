@@ -16,7 +16,7 @@ from forecasting_tools.forecasting.questions_and_reports.report_section import (
 
 def test_metaculus_report_is_jsonable() -> None:
     temp_writing_path = "temp/temp_metaculus_report.json"
-    read_report_path = "tests/no_cost_expect_all_to_succeed/test_forecasting/forecasting_test_data/metaculus_forecast_report_examples.json"
+    read_report_path = "code_tests/no_cost_expect_all_to_succeed/test_forecasting/forecasting_test_data/metaculus_forecast_report_examples.json"
     jsonable_assertations.assert_reading_and_printing_from_file_works(
         BinaryReport, read_report_path, temp_writing_path
     )
