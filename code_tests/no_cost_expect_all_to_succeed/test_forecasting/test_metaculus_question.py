@@ -1,5 +1,5 @@
 from code_tests.utilities_for_tests import jsonable_assertations
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     BinaryQuestion,
 )
 

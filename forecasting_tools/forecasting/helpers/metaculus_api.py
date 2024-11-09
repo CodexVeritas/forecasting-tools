@@ -11,7 +11,7 @@ from typing import Any, Sequence, TypeVar
 import requests
 import typeguard
 
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     BinaryQuestion,
     DateQuestion,
     MetaculusQuestion,

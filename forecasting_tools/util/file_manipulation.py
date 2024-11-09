@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from typing import Callable
 
+from PIL import Image
+
 
 def get_absolute_path(path_in_package: str) -> str:
     """
@@ -154,6 +156,15 @@ def log_to_file(
     os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
     with open(full_file_path, "a+") as file:
         file.write(new_text + "\n")
+
+
+@skip_if_file_writing_not_allowed
+def write_image_file(
+    file_path_in_package: str, image: Image.Image, format: str | None = None
+) -> None:
+    full_file_path = get_absolute_path(file_path_in_package)
+    os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
+    image.save(full_file_path, format=format)
 
 
 def current_date_time_string() -> str:

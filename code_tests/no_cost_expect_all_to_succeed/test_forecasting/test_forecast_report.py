@@ -6,10 +6,10 @@ from code_tests.no_cost_expect_all_to_succeed.test_forecasting.forecasting_test_
     ForecastingTestManager,
 )
 from code_tests.utilities_for_tests import jsonable_assertations
-from forecasting_tools.forecasting.forecast_reports.binary_report import (
+from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
-from forecasting_tools.forecasting.forecast_reports.report_section import (
+from forecasting_tools.forecasting.questions_and_reports.report_section import (
     ReportSection,
 )
 

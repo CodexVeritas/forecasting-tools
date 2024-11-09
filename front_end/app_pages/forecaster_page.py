@@ -5,13 +5,6 @@ import dotenv
 import streamlit as st
 from pydantic import BaseModel, Field
 
-from forecasting_tools.forecasting.forecast_reports.binary_report import (
-    BinaryReport,
-)
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
-    BinaryQuestion,
-    QuestionState,
-)
 from forecasting_tools.forecasting.forecast_team.forecast_team import (
     ForecastTeam,
 )
@@ -20,6 +13,13 @@ from forecasting_tools.forecasting.helpers.forecast_database_manager import (
     ForecastRunType,
 )
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
+from forecasting_tools.forecasting.questions_and_reports.binary_report import (
+    BinaryReport,
+)
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+    BinaryQuestion,
+    QuestionState,
+)
 from forecasting_tools.util.jsonable import Jsonable
 from front_end.helpers.report_displayer import ReportDisplayer
 from front_end.helpers.tool_page import ToolPage

@@ -4,6 +4,8 @@ import re
 import urllib.parse
 from datetime import datetime
 
+from pydantic import BaseModel
+
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
 from forecasting_tools.ai_models.basic_model_interfaces.ai_model import AiModel
 from forecasting_tools.ai_models.basic_model_interfaces.outputs_text import (
@@ -14,9 +16,27 @@ from forecasting_tools.ai_models.exa_searcher import (
     ExaSearcher,
     SearchInput,
 )
-from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
+from forecasting_tools.forecasting.helpers.configured_llms import (
+    BasicLlm,
+    VisionData,
+    VisionLlm,
+)
+from forecasting_tools.forecasting.helpers.url_scraper import UrlScraper
+from forecasting_tools.forecasting.helpers.works_cited_creator import (
+    WorksCitedCreator,
+)
+from forecasting_tools.util.jsonable import Jsonable
 
 logger = logging.getLogger(__name__)
+Base64Image = str
+
+
+class ScreenshotDescription(BaseModel, Jsonable):
+    image_description: str
+    url: str
+    title: str | None
+    readable_publish_date: str | None
+    image_data: Base64Image
 
 
 class SmartSearcher(OutputsText, AiModel):
@@ -60,6 +80,7 @@ class SmartSearcher(OutputsText, AiModel):
         self.llm = BasicLlm(temperature=temperature)
         self.include_works_cited_list = include_works_cited_list
         self.use_citation_brackets = use_brackets_around_citations
+        self.num_sites_to_screenshot = num_sites_to_screenshot
 
     async def invoke(self, prompt: str) -> str:
         logger.debug(f"Running search for prompt: {prompt}")
@@ -72,14 +93,24 @@ class SmartSearcher(OutputsText, AiModel):
     async def _mockable_direct_call_to_model(
         self, prompt: str
     ) -> tuple[str, list[ExaHighlightQuote]]:
-        search_terms = await self.__come_up_with_search_queries(prompt)
-        quotes = await self.__search_for_quotes(search_terms)
-        report = await self.__compile_report(quotes, prompt)
+        searches = await self.__come_up_with_search_queries(prompt)
+        quotes = await self.__search_for_quotes(searches)
+        image_descriptions = await self.__get_image_descriptions(
+            quotes, prompt
+        )
+        report = await self.__compile_report(
+            quotes, prompt, image_descriptions
+        )
         if self.include_works_cited_list:
-            works_cited_list = self.__create_works_cited_list(quotes, report)
+            works_cited_list = WorksCitedCreator.create_works_cited_list(
+                quotes, report
+            )
             report = report + "\n\n" + works_cited_list
-        final_report = self.__add_links_to_citations(report, quotes)
-        return final_report, quotes
+        report = self.__add_quote_links_to_citations(report, quotes)
+        report = self.__add_image_links_to_citations(
+            report, image_descriptions
+        )
+        return report, quotes
 
     async def __come_up_with_search_queries(
         self, prompt: str
@@ -154,22 +185,140 @@ class SmartSearcher(OutputsText, AiModel):
         ]
         return most_relevant_quotes
 
+    async def __get_image_descriptions(
+        self, quotes: list[ExaHighlightQuote], prompt: str
+    ) -> list[ScreenshotDescription]:
+        url_scraper = UrlScraper()
+        vision_llm = VisionLlm()
+        screenshot_descriptions = []
+
+        selected_urls = await self.__decide_on_sources_to_screenshot(
+            quotes, prompt
+        )
+
+        for url in selected_urls:
+            try:
+                image_data = await url_scraper.get_screenshot_of_url_as_base64(
+                    url
+                )
+                vision_prompt = clean_indents(
+                    f"""
+                    You have been given the following instructions. Instructions are included between <><><><><><><><><><><><> tags.
+
+                    <><><><><><>START INSTRUCTIONS<><><><><><>
+                    {prompt}
+                    <><><><><><>END INSTRUCTIONS<><><><><><>
+
+                    You are looking at a screenshot of a webpage that may contain relevant information for these instructions.
+                    Please describe what you see in this webpage screenshot, focusing on the information that will help you to answer the instructions.
+                    If you are describing the graph, please give specifics about the data displayed
+                    - Mention a couple of data points you can see throughout the graph
+                    - Give an assessment of general trends of the data.
+                    - Please note when you are estimating versus when you can clearly see the value of a point on the graph
+                    Give a paragraph long description
+                    """
+                )
+                description = await vision_llm.invoke(
+                    VisionData(
+                        prompt=vision_prompt,
+                        b64_image=image_data,
+                        image_resolution="high",
+                    )
+                )
+                description = description.replace("\n", " ")
+                matching_source = next(
+                    (quote for quote in quotes if quote.source.url == url),
+                    None,
+                )
+                screenshot_descriptions.append(
+                    ScreenshotDescription(
+                        image_description=description,
+                        url=url,
+                        image_data=image_data,
+                        title=(
+                            matching_source.source.title
+                            if matching_source
+                            else None
+                        ),
+                        readable_publish_date=(
+                            matching_source.source.readable_publish_date
+                            if matching_source
+                            else None
+                        ),
+                    )
+                )
+                logger.info(f"Got screenshot description for url {url}")
+            except Exception as e:
+                logger.warning(f"Failed to get screenshot for {url}: {str(e)}")
+                continue
+
+        return screenshot_descriptions
+
+    async def __decide_on_sources_to_screenshot(
+        self, quotes: list[ExaHighlightQuote], prompt: str
+    ) -> list[str]:
+        # TODO: Make sure that all the urls are unique
+        formatted_sources = ""
+        for i, quote in enumerate(quotes):
+            source = quote.source
+            formatted_sources += f"{i}) URL: {source.url} | Title: {source.title} | Published: {source.readable_publish_date}\n"
+
+        website_selection_prompt = clean_indents(
+            f"""
+            You are a researcher who has been given the following instructions. Instructions are included between <><><><><><><><><><><><> tags.
+
+            <><><><><><>START INSTRUCTIONS<><><><><><>
+            {prompt}
+            <><><><><><>END INSTRUCTIONS<><><><><><>
+
+            You have already done some initial research and need to select the {self.num_sites_to_screenshot} most relevant sources to do deep dives on.
+            You will skim the rest of the sources, and will only be shown the text.
+            So it is especially important that you choose any sources that you need to see the visual pictures/images/graphs of if that is needed to follow the instructions.
+            If there is a link in the instructions that would be good to follow, you can choose this as well.
+
+            Here are the websites:
+            {formatted_sources}
+
+            Walk through your reason step by step then give your final answer.
+            Return the urls of the best websites to screenshot as a list of strings like this: ["https://www.website.com/article1", "https://www.placeholder.com"]
+            """
+        )
+
+        selected_urls = await self.llm.invoke_and_return_verified_type(
+            website_selection_prompt, list[str]
+        )
+        assert (
+            len(selected_urls) == self.num_sites_to_screenshot
+        ), f"Expected {self.num_sites_to_screenshot} sources to be chosen, but the AI chose {len(selected_urls)}"
+        logger.info(
+            f"Chose these sources for deep dives: {[url for url in selected_urls]}"
+        )
+        return selected_urls
+
     async def __compile_report(
         self,
-        search_results: list[ExaHighlightQuote],
+        quotes: list[ExaHighlightQuote],
         original_instructions: str,
+        image_descriptions: list[ScreenshotDescription],
     ) -> str:
-        assert len(search_results) > 0, "No search results found"
+        assert len(quotes) > 0, "No search results found"
         assert (
-            len(search_results) <= self.num_quotes_to_evaluate_from_search
+            len(quotes) <= self.num_quotes_to_evaluate_from_search
         ), "Too many search results found"
+
         search_result_context = (
-            self.__turn_highlights_into_search_context_for_prompt(
-                search_results
-            )
+            self.__turn_highlights_into_search_context_for_prompt(quotes)
         )
-        logger.info(f"Generating response using {len(search_results)} quotes")
+        image_context = self.__turn_screenshots_into_search_context(
+            image_descriptions
+        )
+
+        logger.info(
+            f"Generating response using {len(quotes)} quotes and {len(image_descriptions)} images"
+        )
         logger.debug(f"Search results:\n{search_result_context}")
+        logger.debug(f"Image descriptions:\n{image_context}")
+
         prompt = clean_indents(
             f"""
             Today is {datetime.now().strftime("%Y-%m-%d")}.
@@ -179,19 +328,20 @@ class SmartSearcher(OutputsText, AiModel):
             {original_instructions}
             <><><><><><><><><><><><>
 
-
             After searching the internet, you found the following results. Results are included between <><><><><><><><><><><><> tags.
             <><><><><><><><><><><><>
             {search_result_context}
+
+            {image_context}
             <><><><><><><><><><><><>
 
             Please follow the instructions and use the search results to answer the question. Unless the instructions specifify otherwise, please cite your sources inline and use markdown formatting.
 
-            For instance, this quote:
-            > [1] "SpaceX successfully completed a full flight test of its Starship spacecraft on April 20, 2023"
+            For text sources, cite like this:
+            > SpaceX successfully completed a full flight test [1].
 
-            Would be cited like this:
-            > SpaceX successfully completed a full flight test of its Starship spacecraft on April 20, 2023 [1].
+            For image sources, cite like this:
+            > The webpage shows a detailed diagram [Image 1].
             """
         )
         report = await self.llm.invoke(prompt)
@@ -201,7 +351,7 @@ class SmartSearcher(OutputsText, AiModel):
     def __turn_highlights_into_search_context_for_prompt(
         highlights: list[ExaHighlightQuote],
     ) -> str:
-        search_context = ""
+        search_context = "Webpage Quotes:\n"
         for i, highlight in enumerate(highlights):
             url = highlight.source.url
             title = highlight.source.title
@@ -210,63 +360,26 @@ class SmartSearcher(OutputsText, AiModel):
         return search_context
 
     @staticmethod
-    def __create_works_cited_list(
-        citations: list[ExaHighlightQuote], report: str
+    def __turn_screenshots_into_search_context(
+        screenshots: list[ScreenshotDescription],
     ) -> str:
-        works_cited_dict = SmartSearcher.__build_works_cited_dict(
-            citations, report
-        )
-        return SmartSearcher.__format_works_cited_list(works_cited_dict)
+        if not screenshots:
+            return ""
 
-    @staticmethod
-    def __build_works_cited_dict(
-        citations: list[ExaHighlightQuote], report: str
-    ) -> dict[str, list[tuple[int, str]]]:
-        works_cited_dict: dict[str, list[tuple[int, str]]] = {}
-        for i, citation in enumerate(citations):
-            if f"[{i+1}]" not in report:
-                continue
-            url_domain = SmartSearcher.__extract_url_domain_from_highlight(
-                citation
-            )
-            source_key = f"{citation.source.title} ({url_domain})"
-            works_cited_dict.setdefault(source_key, []).append(
-                (i + 1, citation.highlight_text)
-            )
-        return works_cited_dict
+        search_context = "Webpage Screenshots:\n"
+        for i, screenshot in enumerate(screenshots):
+            url = screenshot.url
+            title = screenshot.title
+            publish_date = screenshot.readable_publish_date
+            search_context += f'[Image {i+1}] "{screenshot.image_description}". [This quote is from {url} titled "{title}", published on {publish_date}]\n'
+        return search_context
 
-    @staticmethod
-    def __extract_url_domain_from_highlight(
-        citation: ExaHighlightQuote,
-    ) -> str | None:
-        try:
-            assert citation.source.url is not None, "Source URL is None"
-            url_domain = urllib.parse.urlparse(citation.source.url).netloc
-            return url_domain
-        except Exception:
-            return citation.source.url
-
-    @staticmethod
-    def __format_works_cited_list(
-        works_cited_dict: dict[str, list[tuple[int, str]]]
-    ) -> str:
-        works_cited_list = ""
-        for source_num, (source, highlights) in enumerate(
-            works_cited_dict.items(), 1
-        ):
-            works_cited_list += f"Source {source_num}: {source}\n"
-            for citation_num, highlight in highlights:
-                works_cited_list += (
-                    f'- [{citation_num}] Quote: "{highlight}"\n'
-                )
-            works_cited_list += "\n"
-        return works_cited_list
-
-    def __add_links_to_citations(
+    def __add_quote_links_to_citations(
         self, report: str, highlights: list[ExaHighlightQuote]
     ) -> str:
         for i, highlight in enumerate(highlights):
             citation_num = i + 1
+
             less_than_10_words = len(highlight.highlight_text.split()) < 10
             if less_than_10_words:
                 text_fragment = highlight.highlight_text
@@ -283,30 +396,46 @@ class SmartSearcher(OutputsText, AiModel):
                 encoded_last_five_words = urllib.parse.quote(
                     last_five_words, safe=""
                 )
-                text_fragment = f"{encoded_first_five_words},{encoded_last_five_words}"  # Comma indicates that anything can be included in between
+                text_fragment = (
+                    f"{encoded_first_five_words},{encoded_last_five_words}"
+                )
             text_fragment = text_fragment.replace("(", "%28").replace(
                 ")", "%29"
             )
             text_fragment = text_fragment.replace("-", "%2D").strip(",")
             fragment_url = f"{highlight.source.url}#:~:text={text_fragment}"
 
-            if self.use_citation_brackets:
-                markdown_url = f"\\[[{citation_num}]({fragment_url})\\]"
-            else:
-                markdown_url = f"[{citation_num}]({fragment_url})"
-
-            # Combined regex pattern for all citation types
-            pattern = re.compile(
-                r"(?:\\\[)?(\[{}\](?:\(.*?\))?)(?:\\\])?".format(citation_num)
+            report = self.__replace_citation_number_with_url_markdown(
+                report, citation_num, fragment_url, is_image=False
             )
-            # Matches:
-            # [1]
-            # [1](some text)
-            # \[[1]\]
-            # \[[1](some text)\]
-            report = pattern.sub(markdown_url, report)
-
         return report
+
+    def __add_image_links_to_citations(
+        self, report: str, image_descriptions: list[ScreenshotDescription]
+    ) -> str:
+        for i in range(len(image_descriptions)):
+            image_num = i + 1
+            report = self.__replace_citation_number_with_url_markdown(
+                report, image_num, image_descriptions[i].url, is_image=True
+            )
+        return report
+
+    def __replace_citation_number_with_url_markdown(
+        self, report: str, citation_num: int, url: str, is_image: bool
+    ) -> str:
+        citation_text = (
+            f"Image {citation_num}" if is_image else str(citation_num)
+        )
+        if self.use_citation_brackets:
+            markdown_url = f"\\[[{citation_text}]({url})\\]"
+        else:
+            markdown_url = f"[{citation_text}]({url})"
+
+        pattern = re.compile(
+            r"(?:\\\[)?(\[{}\](?:\(.*?\))?)(?:\\\])?".format(citation_text)
+        )
+        new_report = pattern.sub(markdown_url, report)
+        return new_report
 
     @staticmethod
     def _get_cheap_input_for_invoke() -> str:

@@ -6,13 +6,13 @@ import re
 import streamlit as st
 from streamlit.delta_generator import DeltaGenerator
 
-from forecasting_tools.forecasting.forecast_reports.binary_report import (
+from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     BinaryQuestion,
 )
-from forecasting_tools.forecasting.forecast_reports.report_section import (
+from forecasting_tools.forecasting.questions_and_reports.report_section import (
     ReportSection,
 )
 

@@ -6,7 +6,8 @@ import pytest
 from code_tests.no_cost_expect_all_to_succeed.test_forecasting.forecasting_test_manager import (
     ForecastingTestManager,
 )
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     BinaryQuestion,
     DateQuestion,
     MetaculusQuestion,
@@ -14,10 +15,9 @@ from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
     NumericQuestion,
     QuestionState,
 )
-from forecasting_tools.forecasting.forecast_reports.report_organizer import (
+from forecasting_tools.forecasting.questions_and_reports.report_organizer import (
     ReportOrganizer,
 )
-from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 
 logger = logging.getLogger(__name__)
 

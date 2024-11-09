@@ -3,6 +3,9 @@ import re
 
 import pytest
 
+from forecasting_tools.ai_models.resource_managers.monetary_cost_manager import (
+    MonetaryCostManager,
+)
 from forecasting_tools.forecasting.helpers.smart_searcher import SmartSearcher
 
 logger = logging.getLogger(__name__)
@@ -59,8 +62,11 @@ async def test_ask_question_empty_prompt() -> None:
         await searcher.invoke("")
 
 
-async def test_ask_question_needing_screenshot() -> None:
-    searcher = SmartSearcher(num_sites_to_screenshot=1)
-    question = "How many primary colors are in the PrismVu.com Logo? Return a number, and only a number with no other words. Say -1 if you do not know."
-    result = await searcher.invoke_and_return_verified_type(question, int)
-    assert result == 3
+async def test_screenshot_question() -> None:
+    with MonetaryCostManager() as cost_manager:
+        searcher = SmartSearcher(num_sites_to_screenshot=1)
+        question = "When was the most noticeable recent dip in the graph from https://fred.stlouisfed.org/series/GDPC1? Say 0 if you do not know."
+        result = await searcher.invoke(question)
+        logger.info(f"Result: {result}")
+        logger.info(f"Cost: {cost_manager.current_usage}")
+        assert "2020" in result

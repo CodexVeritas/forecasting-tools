@@ -5,10 +5,10 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, field_validator
 
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     MetaculusQuestion,
 )
-from forecasting_tools.forecasting.forecast_reports.report_section import (
+from forecasting_tools.forecasting.questions_and_reports.report_section import (
     ReportSection,
 )
 from forecasting_tools.util.jsonable import Jsonable

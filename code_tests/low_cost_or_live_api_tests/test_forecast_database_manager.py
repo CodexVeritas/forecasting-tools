@@ -1,11 +1,11 @@
 import asyncio
 
-from forecasting_tools.forecasting.forecast_reports.binary_report import (
-    BinaryReport,
-)
 from forecasting_tools.forecasting.helpers.forecast_database_manager import (
     ForecastDatabaseManager,
     ForecastRunType,
+)
+from forecasting_tools.forecasting.questions_and_reports.binary_report import (
+    BinaryReport,
 )
 from forecasting_tools.forecasting.sub_question_researchers.base_rate_researcher import (
     BaseRateReport,

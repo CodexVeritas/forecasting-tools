@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     MetaculusQuestion,
 )
-from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
 from forecasting_tools.forecasting.sub_question_researchers.base_rate_researcher import (
     BaseRateReport,
     BaseRateResearcher,

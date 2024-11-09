@@ -8,17 +8,17 @@ from forecasting_tools.ai_models.ai_utils.ai_misc import (
 from forecasting_tools.ai_models.resource_managers.monetary_cost_manager import (
     MonetaryCostManager,
 )
-from forecasting_tools.forecasting.forecast_reports.forecast_report import (
+from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
+from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ForecastReport,
     ReasonedPrediction,
 )
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     MetaculusQuestion,
 )
-from forecasting_tools.forecasting.forecast_reports.report_organizer import (
+from forecasting_tools.forecasting.questions_and_reports.report_organizer import (
     ReportOrganizer,
 )
-from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
 from forecasting_tools.util import async_batching
 
 logger = logging.getLogger(__name__)

@@ -7,15 +7,15 @@ from datetime import datetime
 from pydantic import AliasChoices, Field, field_validator
 
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
-from forecasting_tools.forecasting.forecast_reports.forecast_report import (
+from forecasting_tools.forecasting.helpers.configured_llms import AdvancedLlm
+from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
+from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ForecastReport,
     ReasonedPrediction,
 )
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     BinaryQuestion,
 )
-from forecasting_tools.forecasting.helpers.configured_llms import AdvancedLlm
-from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 
 
 class BinaryReport(ForecastReport):

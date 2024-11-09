@@ -1,7 +1,7 @@
-from forecasting_tools.forecasting.forecast_reports.forecast_report import (
+from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ForecastReport,
 )
-from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     MultipleChoiceQuestion,
 )
 
