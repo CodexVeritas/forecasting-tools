@@ -6,7 +6,9 @@ import logging
 from forecasting_tools.ai_models.resource_managers.monetary_cost_manager import (
     MonetaryCostManager,
 )
-from forecasting_tools.forecasting.team_manager import TeamManager
+from forecasting_tools.forecasting.forecast_team.team_manager import (
+    TeamManager,
+)
 from forecasting_tools.util.custom_logger import CustomLogger
 
 logger = logging.getLogger(__name__)

@@ -8,8 +8,10 @@ from forecasting_tools.forecasting.forecast_reports.forecast_report import (
     ForecastReport,
     ReasonedPrediction,
 )
-from forecasting_tools.forecasting.llms.configured_llms import BasicLlm
-from forecasting_tools.forecasting.metaculus_question import NumericQuestion
+from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+    NumericQuestion,
+)
+from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
 
 logger = logging.getLogger(__name__)
 

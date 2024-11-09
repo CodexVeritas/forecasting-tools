@@ -7,20 +7,20 @@ from forecasting_tools.forecasting.forecast_reports.date_report import (
 from forecasting_tools.forecasting.forecast_reports.forecast_report import (
     ForecastReport,
 )
-from forecasting_tools.forecasting.forecast_reports.multiple_choice_report import (
-    MultipleChoiceReport,
-)
-from forecasting_tools.forecasting.forecast_reports.numeric_report import (
-    NumericReport,
-)
-from forecasting_tools.forecasting.metaculus_api import MetaculusApi
-from forecasting_tools.forecasting.metaculus_question import (
+from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
     BinaryQuestion,
     DateQuestion,
     MetaculusQuestion,
     MultipleChoiceQuestion,
     NumericQuestion,
 )
+from forecasting_tools.forecasting.forecast_reports.multiple_choice_report import (
+    MultipleChoiceReport,
+)
+from forecasting_tools.forecasting.forecast_reports.numeric_report import (
+    NumericReport,
+)
+from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 
 
 class ReportOrganizer:

@@ -11,9 +11,11 @@ from forecasting_tools.forecasting.forecast_reports.forecast_report import (
     ForecastReport,
     ReasonedPrediction,
 )
-from forecasting_tools.forecasting.llms.configured_llms import AdvancedLlm
-from forecasting_tools.forecasting.metaculus_api import MetaculusApi
-from forecasting_tools.forecasting.metaculus_question import BinaryQuestion
+from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+    BinaryQuestion,
+)
+from forecasting_tools.forecasting.helpers.configured_llms import AdvancedLlm
+from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 
 
 class BinaryReport(ForecastReport):
@@ -111,9 +113,10 @@ class BinaryReport(ForecastReport):
             (a) The time left until the outcome to the question is known.
             (b) What the outcome would be if nothing changed.
             (c) The most important factors that will influence a successful/unsuccessful resolution.
-            (d) What you would forecast if you were to only use historical precedent (i.e. how often this happens in the past) without any current information.
-            (e) What you would forecast if there was only a quarter of the time left.
-            (f) What you would forecast if there was 4x the time left.
+            (d) What do you not know that should give you pause and lower confidence? Remember people are statistically overconfident.
+            (e) What you would forecast if you were to only use historical precedent (i.e. how often this happens in the past) without any current information.
+            (f) What you would forecast if there was only a quarter of the time left.
+            (g) What you would forecast if there was 4x the time left.
 
             You write your rationale and then the last thing you write is your final answer as: "Probability: ZZ%", 0-100
             """
@@ -121,7 +124,7 @@ class BinaryReport(ForecastReport):
         final_prediction_model = AdvancedLlm()
         gpt_forecast = await final_prediction_model.invoke(prompt)
         prediction, clamped_message = cls.__extract_prediction_from_response(
-            gpt_forecast, max_prediction=95, min_prediction=1
+            gpt_forecast, max_prediction=95, min_prediction=5
         )
         reasoning = gpt_forecast + clamped_message
         return ReasonedPrediction(

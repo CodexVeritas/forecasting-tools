@@ -8,7 +8,7 @@ from forecasting_tools.ai_models.model_archetypes.perplexity_text_model import (
 class Perplexity(PerplexityTextModel):
     MODEL_NAME: Final[str] = "llama-3.1-sonar-huge-128k-online"
     REQUESTS_PER_PERIOD_LIMIT: Final[int] = (
-        16  # Technically 20, but has problems at 20 for some reason
+        40  # Technically 50, but giving wiggle room
     )
     REQUEST_PERIOD_IN_SECONDS: Final[int] = 60
     TIMEOUT_TIME: Final[int] = 120

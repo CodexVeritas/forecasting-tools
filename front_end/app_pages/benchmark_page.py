@@ -142,7 +142,9 @@ class BenchmarkPage(AppPage):
                 else -1
             )
             st.write(
-                f"- **Δ:** {deviation:.4f} | **🤖:** {report.prediction:.2%} | **👥:** {report.community_prediction:.2%} | **Question:** {report.question.question_text}"
+                ReportDisplayer.clean_markdown(
+                    f"- **Δ:** {deviation:.4f} | **🤖:** {report.prediction:.2%} | **👥:** {report.community_prediction:.2%} | **Question:** {report.question.question_text}"
+                )
             )
 
     @classmethod

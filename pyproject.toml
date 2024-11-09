@@ -40,6 +40,7 @@ transformers = "^4.44.1"
 typeguard = "^4.3.0"
 pre-commit = "^4.0.1"
 scikit-learn = "^1.5.2"
+crawl4ai = "^0.3.73"
 
 [tool.poetry.group.dev.dependencies]
 streamlit = "^1.36.0"

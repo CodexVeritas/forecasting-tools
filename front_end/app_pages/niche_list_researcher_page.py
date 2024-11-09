@@ -6,11 +6,11 @@ from pydantic import BaseModel
 from forecasting_tools.ai_models.resource_managers.monetary_cost_manager import (
     MonetaryCostManager,
 )
-from forecasting_tools.forecasting.forecast_database_manager import (
+from forecasting_tools.forecasting.helpers.forecast_database_manager import (
     ForecastDatabaseManager,
     ForecastRunType,
 )
-from forecasting_tools.forecasting.sub_question_responders.niche_list_researcher import (
+from forecasting_tools.forecasting.sub_question_researchers.niche_list_researcher import (
     FactCheckedItem,
     NicheListResearcher,
 )

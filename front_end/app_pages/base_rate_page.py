@@ -13,11 +13,11 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 top_level_dir = os.path.abspath(os.path.join(current_dir, "../../../"))
 sys.path.append(top_level_dir)
 
-from forecasting_tools.forecasting.forecast_database_manager import (
+from forecasting_tools.forecasting.helpers.forecast_database_manager import (
     ForecastDatabaseManager,
     ForecastRunType,
 )
-from forecasting_tools.forecasting.sub_question_responders.base_rate_researcher import (
+from forecasting_tools.forecasting.sub_question_researchers.base_rate_researcher import (
     BaseRateReport,
     BaseRateResearcher,
 )

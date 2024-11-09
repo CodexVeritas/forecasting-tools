@@ -9,10 +9,12 @@ from streamlit.delta_generator import DeltaGenerator
 from forecasting_tools.forecasting.forecast_reports.binary_report import (
     BinaryReport,
 )
+from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
+    BinaryQuestion,
+)
 from forecasting_tools.forecasting.forecast_reports.report_section import (
     ReportSection,
 )
-from forecasting_tools.forecasting.metaculus_question import BinaryQuestion
 
 logger = logging.getLogger(__name__)
 

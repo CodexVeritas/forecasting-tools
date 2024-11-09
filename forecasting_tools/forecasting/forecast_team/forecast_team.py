@@ -10,17 +10,17 @@ from forecasting_tools.ai_models.resource_managers.monetary_cost_manager import 
 from forecasting_tools.forecasting.forecast_reports.binary_report import (
     ForecastReport,
 )
-from forecasting_tools.forecasting.forecast_team.final_decision_agent import (
-    FinalDecisionAgent,
-)
-from forecasting_tools.forecasting.forecast_team.research_manager import (
-    ResearchManager,
-)
-from forecasting_tools.forecasting.metaculus_question import (
+from forecasting_tools.forecasting.forecast_reports.metaculus_question import (
     BinaryQuestion,
     DateQuestion,
     MetaculusQuestion,
     NumericQuestion,
+)
+from forecasting_tools.forecasting.forecast_team.final_decision_agent import (
+    FinalDecisionAgent,
+)
+from forecasting_tools.forecasting.forecast_team.research_coordinator import (
+    ResearchCoordinator,
 )
 from forecasting_tools.util import async_batching
 
@@ -89,7 +89,7 @@ class ForecastTeam:
 
     async def __research_and_make_forecast(self) -> ForecastReport:
         with MonetaryCostManager() as cost_manager:
-            research_manager = ResearchManager(self.question)
+            research_manager = ResearchCoordinator(self.question)
             combined_markdown = (
                 await research_manager.create_full_markdown_research_report(
                     self.number_of_background_questions_to_ask,
