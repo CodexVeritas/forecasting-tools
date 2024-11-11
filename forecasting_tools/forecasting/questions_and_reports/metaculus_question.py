@@ -5,7 +5,7 @@ import textwrap
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from forecasting_tools.util.jsonable import Jsonable
 
@@ -18,19 +18,21 @@ class QuestionState(Enum):
 
 
 class MetaculusQuestion(BaseModel, Jsonable):
-    date_accessed: datetime = Field(default_factory=datetime.now)
     question_text: str
-    question_id: int
+    page_url: str | None = None
+    post_id: int = Field(
+        validation_alias=AliasChoices("question_id", "post_id")
+    )
+    num_forecasters: int | None = None
+    num_predictions: int | None = None
     state: QuestionState
     resolution_criteria: str | None = None
     fine_print: str | None = None
     background_info: str | None = None
-    page_url: str | None = None
-    num_forecasters: int | None = None
-    num_predictions: int | None = None
     close_time: datetime | None = None
     actual_resolution_time: datetime | None = None
     scheduled_resolution_time: datetime | None = None
+    date_accessed: datetime = Field(default_factory=datetime.now)
     api_json: dict = Field(
         description="The API JSON response used to create the question",
         default_factory=dict,
@@ -39,6 +41,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
     @classmethod
     def from_metaculus_api_json(cls, api_json: dict) -> MetaculusQuestion:
         question_id = api_json["id"]
+        logger.debug(f"Processing question ID {question_id}")
         json_state = api_json["status"]
         question_state = (
             QuestionState.OPEN if json_state == "open" else QuestionState.OTHER
@@ -51,7 +54,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
         return MetaculusQuestion(
             state=question_state,
             question_text=question_json["title"],
-            question_id=question_id,
+            post_id=question_id,
             background_info=question_json.get("description", None),
             fine_print=question_json.get("fine_print", None),
             resolution_criteria=question_json.get("resolution_criteria", None),
@@ -73,16 +76,19 @@ class MetaculusQuestion(BaseModel, Jsonable):
         )
 
     @classmethod
-    def _parse_api_date(cls, date_string: str) -> datetime:
+    def _parse_api_date(cls, date_value: str | float) -> datetime:
+        if isinstance(date_value, float):
+            return datetime.fromtimestamp(date_value)
+        assert isinstance(date_value, str)
         try:
-            return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S.%fZ")
+            return datetime.strptime(date_value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
             pass
         try:
-            return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ")
+            return datetime.strptime(date_value, "%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
             pass
-        return datetime.strptime(date_string, "%Y-%m-%d")
+        return datetime.strptime(date_value, "%Y-%m-%d")
 
     @classmethod
     def get_api_type_name(cls) -> str:
@@ -94,7 +100,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
         today_string = datetime.now().strftime("%Y-%m-%d")
         question_details = textwrap.dedent(
             f"""
-            You are trying to predict the outcome of the following question:
+            The main question is:
             {self.question_text}
 
             Here is the resolution criteria:
@@ -103,7 +109,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
             Here is the fine print:
             {self.fine_print}
 
-            Here is some background information:
+            Here is the background information:
             {self.background_info}
 
             Today is (YYYY-MM-DD):
@@ -137,7 +143,30 @@ class BinaryQuestion(MetaculusQuestion):
         return "binary"
 
 
-class DateQuestion(MetaculusQuestion):
+class BoundedQuestionMixin:
+    @classmethod
+    def _get_bounds_from_api_json(
+        cls, api_json: dict
+    ) -> tuple[bool, bool, float, float]:
+        try:
+            open_upper_bound = api_json["question"]["open_upper_bound"]  # type: ignore
+            open_lower_bound = api_json["question"]["open_lower_bound"]  # type: ignore
+        except KeyError:
+            logger.warning(
+                "Open bounds not found in API JSON defaulting to 'open bounds'"
+            )
+            open_lower_bound = True
+            open_upper_bound = True
+
+        upper_bound = api_json["question"]["scaling"]["range_max"]  # type: ignore
+        lower_bound = api_json["question"]["scaling"]["range_min"]  # type: ignore
+
+        assert isinstance(upper_bound, float), f"Upper bound is {upper_bound}"
+        assert isinstance(lower_bound, float), f"Lower bound is {lower_bound}"
+        return open_upper_bound, open_lower_bound, upper_bound, lower_bound
+
+
+class DateQuestion(MetaculusQuestion, BoundedQuestionMixin):
     upper_bound: datetime
     lower_bound: datetime
     upper_bound_is_hard_limit: bool
@@ -146,15 +175,18 @@ class DateQuestion(MetaculusQuestion):
     @classmethod
     def from_metaculus_api_json(cls, api_json: dict) -> DateQuestion:
         normal_metaculus_question = super().from_metaculus_api_json(api_json)
-        unparsed_upper_bound_date = api_json["question"]["possibilities"]["scale"]["max"]  # type: ignore
-        unparsed_lower_bound_date = api_json["question"]["possibilities"]["scale"]["min"]  # type: ignore
-        upper_bound_date = cls._parse_api_date(unparsed_upper_bound_date)
-        lower_bound_date = cls._parse_api_date(unparsed_lower_bound_date)
+        (
+            open_upper_bound,
+            open_lower_bound,
+            unparsed_upper_bound,
+            unparsed_lower_bound,
+        ) = cls._get_bounds_from_api_json(api_json)
+
         return DateQuestion(
-            upper_bound=upper_bound_date,
-            lower_bound=lower_bound_date,
-            upper_bound_is_hard_limit=not api_json["question"]["open_upper_bound"],  # type: ignore
-            lower_bound_is_hard_limit=not api_json["question"]["open_lower_bound"],  # type: ignore
+            upper_bound=cls._parse_api_date(unparsed_upper_bound),
+            lower_bound=cls._parse_api_date(unparsed_lower_bound),
+            upper_bound_is_hard_limit=not open_upper_bound,
+            lower_bound_is_hard_limit=not open_lower_bound,
             **normal_metaculus_question.model_dump(),
         )
 
@@ -163,7 +195,7 @@ class DateQuestion(MetaculusQuestion):
         return "date"
 
 
-class NumericQuestion(MetaculusQuestion):
+class NumericQuestion(MetaculusQuestion, BoundedQuestionMixin):
     upper_bound: float
     lower_bound: float
     upper_bound_is_hard_limit: bool
@@ -172,11 +204,17 @@ class NumericQuestion(MetaculusQuestion):
     @classmethod
     def from_metaculus_api_json(cls, api_json: dict) -> NumericQuestion:
         normal_metaculus_question = super().from_metaculus_api_json(api_json)
+        open_upper_bound, open_lower_bound, upper_bound, lower_bound = (
+            cls._get_bounds_from_api_json(api_json)
+        )
+        assert isinstance(upper_bound, float)
+        assert isinstance(lower_bound, float)
+
         return NumericQuestion(
-            upper_bound=api_json["question"]["possibilities"]["scale"]["max"],  # type: ignore
-            lower_bound=api_json["question"]["possibilities"]["scale"]["min"],  # type: ignore
-            upper_bound_is_hard_limit=not api_json["question"]["open_upper_bound"],  # type: ignore
-            lower_bound_is_hard_limit=not api_json["question"]["open_lower_bound"],  # type: ignore
+            upper_bound=upper_bound,
+            lower_bound=lower_bound,
+            upper_bound_is_hard_limit=not open_upper_bound,
+            lower_bound_is_hard_limit=not open_lower_bound,
             **normal_metaculus_question.model_dump(),
         )
 
@@ -199,3 +237,11 @@ class MultipleChoiceQuestion(MetaculusQuestion):
     @classmethod
     def get_api_type_name(cls) -> str:
         return "multiple_choice"
+
+    def give_question_details_as_markdown(self) -> str:
+        original_details = super().give_question_details_as_markdown()
+        final_details = (
+            original_details
+            + f"\n\nThe final options you can choose are:\n {self.options}"
+        )
+        return final_details.strip()

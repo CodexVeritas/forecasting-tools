@@ -316,9 +316,8 @@ from forecasting_tools import MetaculusApi
 
 question = MetaculusApi.get_question_by_id(11245)  # US 2024 Election
 question = MetaculusApi.get_question_by_url("https://www.metaculus.com/questions/11245/...")
-questions = MetaculusApi.get_all_questions_from_tournament(
+questions = MetaculusApi.get_all_open_questions_from_tournament(
     tournament_id=3672,  # Q4 2024 Quarterly Cup
-    filter_by_open=True  # Only return open questions
 )
 MetaculusApi.post_binary_question_prediction(
     question_id=11245,

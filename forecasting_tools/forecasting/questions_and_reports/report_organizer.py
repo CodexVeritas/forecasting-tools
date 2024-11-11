@@ -75,7 +75,7 @@ class ReportOrganizer:
         question_id = cls.get_example_question_id_for_question_type(
             question_type
         )
-        question = MetaculusApi.get_question_by_id(question_id)
+        question = MetaculusApi.get_question_by_post_id(question_id)
         assert isinstance(question, question_type)
         return question
 

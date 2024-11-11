@@ -22,9 +22,7 @@ async def test_collects_reports_on_open_questions(mocker: Mock) -> None:
     manager = TeamManager()
     reports = await manager.run_forecasts_on_all_open_questions(tournament_id)
     questions_that_should_be_being_forecast_on = (
-        MetaculusApi.get_all_questions_from_tournament(
-            tournament_id, filter_by_open=True
-        )
+        MetaculusApi.get_all_open_questions_from_tournament(tournament_id)
     )
     assert len(reports) == len(
         questions_that_should_be_being_forecast_on

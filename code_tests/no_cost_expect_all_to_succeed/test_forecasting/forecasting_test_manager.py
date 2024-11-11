@@ -27,14 +27,13 @@ class ForecastingTestManager:
         MetaculusApi.AI_COMPETITION_ID_Q4
     )
     TOURNAMENT_WITH_MIX_OF_QUESTION_TYPES = MetaculusApi.Q4_2024_QUARTERLY_CUP
+    TOURN_WITH_OPENNESS_AND_TYPE_VARIATIONS = (
+        MetaculusApi.Q4_2024_QUARTERLY_CUP
+    )
 
     @classmethod
     def get_question_safe_to_pull_and_push_to(cls) -> BinaryQuestion:
-        questions = MetaculusApi.get_all_questions_from_tournament(
-            cls.TOURNAMENT_SAFE_TO_PULL_AND_PUSH_TO
-        )
-        assert len(questions) > 0
-        question = questions[0]
+        question = MetaculusApi.get_question_by_post_id(25769)
         assert isinstance(question, BinaryQuestion)
         question.community_prediction_at_access_time = (
             0  # Some tests need a value to manipulate

@@ -31,9 +31,9 @@ def test_get_binary_question_type_from_id() -> None:
     question_id = ReportOrganizer.get_example_question_id_for_question_type(
         BinaryQuestion
     )
-    question = MetaculusApi.get_question_by_id(question_id)
+    question = MetaculusApi.get_question_by_post_id(question_id)
     assert isinstance(question, BinaryQuestion)
-    assert question_id == question.question_id
+    assert question_id == question.post_id
     assert question.community_prediction_at_access_time is not None
     assert abs(question.community_prediction_at_access_time - 0.96) < 0.03
     assert question.state == QuestionState.OPEN
@@ -44,9 +44,9 @@ def test_get_numeric_question_type_from_id() -> None:
     question_id = ReportOrganizer.get_example_question_id_for_question_type(
         NumericQuestion
     )
-    question = MetaculusApi.get_question_by_id(question_id)
+    question = MetaculusApi.get_question_by_post_id(question_id)
     assert isinstance(question, NumericQuestion)
-    assert question_id == question.question_id
+    assert question_id == question.post_id
     assert question.lower_bound == 0
     assert question.upper_bound == 100
     assert question.lower_bound_is_hard_limit
@@ -58,9 +58,9 @@ def test_get_date_question_type_from_id() -> None:
     question_id = ReportOrganizer.get_example_question_id_for_question_type(
         DateQuestion
     )
-    question = MetaculusApi.get_question_by_id(question_id)
+    question = MetaculusApi.get_question_by_post_id(question_id)
     assert isinstance(question, DateQuestion)
-    assert question_id == question.question_id
+    assert question_id == question.post_id
     assert question.lower_bound == datetime(2020, 8, 25)
     assert question.upper_bound == datetime(2199, 12, 25)
     assert question.lower_bound_is_hard_limit
@@ -72,9 +72,9 @@ def test_get_multiple_choice_question_type_from_id() -> None:
     question_id = ReportOrganizer.get_example_question_id_for_question_type(
         MultipleChoiceQuestion
     )
-    question = MetaculusApi.get_question_by_id(question_id)
+    question = MetaculusApi.get_question_by_post_id(question_id)
     assert isinstance(question, MultipleChoiceQuestion)
-    assert question_id == question.question_id
+    assert question_id == question.post_id
     assert len(question.options) == 3
     assert "Russia" in question.options
     assert "Ukraine" in question.options
@@ -85,7 +85,7 @@ def test_get_multiple_choice_question_type_from_id() -> None:
 def test_post_comment_on_question() -> None:
     question = ForecastingTestManager.get_question_safe_to_pull_and_push_to()
     MetaculusApi.post_question_comment(
-        question.question_id, "This is a test comment"
+        question.post_id, "This is a test comment"
     )
     # No assertion needed, just check that the request did not raise an exception
 
@@ -94,14 +94,14 @@ def test_post_comment_on_question() -> None:
 def test_post_binary_prediction_on_question() -> None:
     question = ForecastingTestManager.get_question_safe_to_pull_and_push_to()
     assert isinstance(question, BinaryQuestion)
-    question_id = question.question_id
+    question_id = question.post_id
     MetaculusApi.post_binary_question_prediction(question_id, 0.01)
     MetaculusApi.post_binary_question_prediction(question_id, 0.99)
 
 
 def test_post_binary_prediction_error_when_out_of_range() -> None:
     question = ForecastingTestManager.get_question_safe_to_pull_and_push_to()
-    question_id = question.question_id
+    question_id = question.post_id
     with pytest.raises(ValueError):
         MetaculusApi.post_binary_question_prediction(question_id, 0)
     with pytest.raises(ValueError):
@@ -116,7 +116,7 @@ def test_questions_returned_from_list_questions() -> None:
     ai_tournament_id = (
         ForecastingTestManager.TOURNAMENT_WITH_MIXTURE_OF_OPEN_AND_NOT_OPEN
     )
-    questions = MetaculusApi.get_all_questions_from_tournament(
+    questions = MetaculusApi.get_all_open_questions_from_tournament(
         ai_tournament_id
     )
     assert len(questions) > 0
@@ -124,23 +124,20 @@ def test_questions_returned_from_list_questions() -> None:
         assert isinstance(question, BinaryQuestion)
 
 
-def test_open_filter_works_for_questions() -> None:
-    ai_tournament_id = (
-        ForecastingTestManager.TOURNAMENT_WITH_MIXTURE_OF_OPEN_AND_NOT_OPEN
+def test_get_questions_from_tournament() -> None:
+    questions = MetaculusApi.get_all_open_questions_from_tournament(
+        ForecastingTestManager.TOURN_WITH_OPENNESS_AND_TYPE_VARIATIONS
     )
-    questions_without_filter = MetaculusApi.get_all_questions_from_tournament(
-        ai_tournament_id
+    assert any(isinstance(question, BinaryQuestion) for question in questions)
+    assert any(isinstance(question, NumericQuestion) for question in questions)
+    assert any(isinstance(question, DateQuestion) for question in questions)
+    assert any(
+        isinstance(question, MultipleChoiceQuestion) for question in questions
     )
-    questions_with_filter = MetaculusApi.get_all_questions_from_tournament(
-        ai_tournament_id, filter_by_open=True
-    )
-    assert len(questions_without_filter) > len(
-        questions_with_filter
-    ), "Expected more questions without filter than with filter"
-    for question in questions_with_filter:
-        assert (
-            question.state == QuestionState.OPEN
-        ), f"Expected question to be open, but got {question.state}"
+
+    for question in questions:
+        assert question.state == QuestionState.OPEN
+        assert_basic_question_attributes_not_none(question, question.post_id)
 
 
 @pytest.mark.parametrize("num_questions_to_get", [30, 100])
@@ -176,7 +173,7 @@ def test_get_benchmark_questions(num_questions_to_get: int) -> None:
         assert question.state == QuestionState.OPEN
         assert question.community_prediction_at_access_time is not None
         logger.info(f"Found question: {question.question_text}")
-    question_ids = [question.question_id for question in questions]
+    question_ids = [question.post_id for question in questions]
     assert len(question_ids) == len(
         set(question_ids)
     ), "Not all questions are unique"
@@ -184,8 +181,8 @@ def test_get_benchmark_questions(num_questions_to_get: int) -> None:
     questions2 = MetaculusApi.get_benchmark_questions(
         num_questions_to_get, random_seed
     )
-    question_ids1 = [q.question_id for q in questions]
-    question_ids2 = [q.question_id for q in questions2]
+    question_ids1 = [q.post_id for q in questions]
+    question_ids2 = [q.post_id for q in questions2]
     assert (
         question_ids1 == question_ids2
     ), "Questions retrieved with same random seed should return same IDs"
@@ -205,6 +202,12 @@ def test_get_questions_from_current_quartely_cup() -> None:
             question.question_text == expected_question_text
             for question in questions
         )
+        assert all(
+            question.state == QuestionState.OPEN for question in questions
+        ), "Expected all questions to be open"
+        assert all(
+            isinstance(question, BinaryQuestion) for question in questions
+        ), "Expected all questions to be binary"
 
 
 def assert_basic_question_attributes_not_none(
@@ -231,3 +234,9 @@ def assert_basic_question_attributes_not_none(
     assert question.close_time > datetime.now()
     if question.scheduled_resolution_time:
         assert question.scheduled_resolution_time >= question.close_time
+    if (
+        isinstance(question, BinaryQuestion)
+        and question.state == QuestionState.OPEN
+    ):
+        assert question.community_prediction_at_access_time is not None
+        assert 0 <= question.community_prediction_at_access_time <= 1

@@ -9,9 +9,13 @@ class WorksCitedCreator:
 
     @classmethod
     def create_works_cited_list(
-        cls, quotes: list[ExaHighlightQuote], report: str
+        cls,
+        quotes_in_citation_order: list[ExaHighlightQuote],
+        report_with_citations: str,
     ) -> str:
-        works_cited_dict = cls.__build_works_cited_dict(quotes, report)
+        works_cited_dict = cls.__build_works_cited_dict(
+            quotes_in_citation_order, report_with_citations
+        )
         return cls.__format_works_cited_list(works_cited_dict)
 
     @classmethod

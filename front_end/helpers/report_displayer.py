@@ -90,7 +90,7 @@ class ReportDisplayer:
         assert all(section.section_content is not None for section in sections)
 
         tab_names = [section.title or "Untitled" for section in sections]
-        show_question_details = report.question.question_id > 0
+        show_question_details = report.question.post_id > 0
         if show_question_details:
             tab_names.append("Question Details")
         tabs = st.tabs(tab_names)
@@ -163,8 +163,8 @@ class ReportDisplayer:
                 st.write(
                     f"**Scheduled Resolution Time:** {question.scheduled_resolution_time}"
                 )
-            if question.question_id > 0:
-                st.write(f"**Question ID:** {question.question_id}")
+            if question.post_id > 0:
+                st.write(f"**Question ID:** {question.post_id}")
 
     @classmethod
     def __display_nested_sections(

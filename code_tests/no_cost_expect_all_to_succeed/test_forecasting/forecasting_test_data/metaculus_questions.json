@@ -429,5 +429,143 @@
             "categories": [],
             "status": "A"
         }
+    },
+    {
+        "date_accessed": "2024-11-09T07:29:24.579366",
+        "question_text": "Will the 2024 World Chess Champion be decided in the first 10 games?",
+        "question_id": 29783,
+        "state": "open",
+        "resolution_criteria": "This question will resolve as **Yes** if either player in the 2024 World Chess Championship match reaches 7.5 points before the 11th classical game (e.g. by winning 5 games and drawing another 5).\n\nThis question will also resolve as **Yes** if for any other reason the 2024 Chess Champion is declared by FIDE before the 11th classical game is played (e.g. a player forteits the match or is disqualified during the match).",
+        "fine_print": "* If the match is played by any other players than Ding Liren and Gukesh Dommaraju, the question will be **Annulled**.\n* If the result of the game 10 is not known by 7 January 2025 (and the 2024 Chess Champion is still not declared by that date) the question will resolve as **Ambiguous**.\n* If the results of one or more of the first 10 games are annulled, then these games are not included in the count of the games for the resolution. This includes the case when both players receive 0 points for the game for violating Fair Play policy.\n* If the 2024 Chess Champion title is later revoked (e.g. due to revealed fact of cheating), it will not affect the question resolution.",
+        "background_info": "The [World Chess Championship 2024](https://en.wikipedia.org/wiki/World_Chess_Championship_2024) match between the reigning world champion Ding Liren (Rating: 2728 as of 1 Nov 2024) and the challenger Gukesh Dommaraju (Rating: 2783 as of 1 Nov 2024) is set to take place between 25 November and 13 December 2024, in Singapore.\n\nAs of November 1st, 2024, Ding Liren is [23rd in the world](https://2700chess.com/), but was in the top 5 for 6 consecutive years, reaching as high as #2, with his top rating being the 12th highest in the history of chess. He also [used to have](https://en.chessbase.com/post/ding-liren-profile-2024-fide) the longest unbeaten streak of 100 games, until Carsen surpassed it. Gukesh D has his own [set of achievements](https://en.wikipedia.org/wiki/Gukesh_Dommaraju), being the third-youngest grandmaster in history, the third-youngest to reach a chess rating of 2700, the youngest to reach a rating of 2750, the youngest Candidates Tournament winner and the youngest contender to compete for the World Championship.\n\nThe match will be best of 14 games; a score of at least 7\u00bd would win the world championship. If the score is equal after 14 games, tiebreak games with faster time controls will be played. \n\nIn chess a win is 1 point and a draw is \u00bd point with a high tendency towards draws at the highest level.\n\nThe time control for each game in the classical portion of the match is 120 minutes per side for the first 40 moves and 30 minutes for the rest of the game, with a 30-second increment per move starting with move 41.",
+        "page_url": "https://www.metaculus.com/questions/29783",
+        "num_forecasters": 23,
+        "num_predictions": 52,
+        "close_time": "2024-11-09T15:30:00",
+        "actual_resolution_time": null,
+        "scheduled_resolution_time": "2024-12-08T15:30:00",
+        "api_json": {
+            "id": 29783,
+            "title": "Will the 2024 World Chess Champion be decided in the first 10 games?",
+            "url_title": "",
+            "slug": "will-the-2024-world-chess-champion-be-decided-in-the-first-10-games",
+            "author_id": 113860,
+            "author_username": "RuslanBes",
+            "coauthors": [],
+            "projects": {
+                "question_series": [
+                    {
+                        "id": 32506,
+                        "type": "question_series",
+                        "name": "Q4 AI Forecasting Benchmark Tournament",
+                        "slug": "aibq4",
+                        "prize_pool": "30000.00",
+                        "start_date": "2024-10-08T19:25:49Z",
+                        "close_date": "2025-01-01T19:25:50Z",
+                        "meta_description": "",
+                        "is_ongoing": true,
+                        "user_permission": null,
+                        "created_at": "2024-10-07T19:26:23.380022Z",
+                        "edited_at": "2024-10-07T19:26:23.380027Z",
+                        "default_permission": "viewer",
+                        "add_posts_to_main_feed": false
+                    }
+                ],
+                "default_project": {
+                    "id": 32506,
+                    "type": "question_series",
+                    "name": "Q4 AI Forecasting Benchmark Tournament",
+                    "slug": "aibq4",
+                    "prize_pool": "30000.00",
+                    "start_date": "2024-10-08T19:25:49Z",
+                    "close_date": "2025-01-01T19:25:50Z",
+                    "meta_description": "",
+                    "is_ongoing": true,
+                    "user_permission": null,
+                    "created_at": "2024-10-07T19:26:23.380022Z",
+                    "edited_at": "2024-10-07T19:26:23.380027Z",
+                    "default_permission": "viewer",
+                    "add_posts_to_main_feed": false
+                }
+            },
+            "created_at": "2024-11-08T14:19:42.579234Z",
+            "published_at": "2024-11-08T15:30:00Z",
+            "edited_at": "2024-11-08T14:19:42.582780Z",
+            "curation_status": "approved",
+            "comment_count": 0,
+            "status": "open",
+            "resolved": false,
+            "actual_close_time": null,
+            "scheduled_close_time": "2024-11-09T15:30:00Z",
+            "scheduled_resolve_time": "2024-12-08T15:30:00Z",
+            "open_time": "2024-11-08T15:30:00Z",
+            "nr_forecasters": 23,
+            "question": {
+                "id": 29635,
+                "title": "Will the 2024 World Chess Champion be decided in the first 10 games?",
+                "description": "The [World Chess Championship 2024](https://en.wikipedia.org/wiki/World_Chess_Championship_2024) match between the reigning world champion Ding Liren (Rating: 2728 as of 1 Nov 2024) and the challenger Gukesh Dommaraju (Rating: 2783 as of 1 Nov 2024) is set to take place between 25 November and 13 December 2024, in Singapore.\n\nAs of November 1st, 2024, Ding Liren is [23rd in the world](https://2700chess.com/), but was in the top 5 for 6 consecutive years, reaching as high as #2, with his top rating being the 12th highest in the history of chess. He also [used to have](https://en.chessbase.com/post/ding-liren-profile-2024-fide) the longest unbeaten streak of 100 games, until Carsen surpassed it. Gukesh D has his own [set of achievements](https://en.wikipedia.org/wiki/Gukesh_Dommaraju), being the third-youngest grandmaster in history, the third-youngest to reach a chess rating of 2700, the youngest to reach a rating of 2750, the youngest Candidates Tournament winner and the youngest contender to compete for the World Championship.\n\nThe match will be best of 14 games; a score of at least 7\u00bd would win the world championship. If the score is equal after 14 games, tiebreak games with faster time controls will be played. \n\nIn chess a win is 1 point and a draw is \u00bd point with a high tendency towards draws at the highest level.\n\nThe time control for each game in the classical portion of the match is 120 minutes per side for the first 40 moves and 30 minutes for the rest of the game, with a 30-second increment per move starting with move 41.",
+                "created_at": "2024-11-08T14:19:42.579234Z",
+                "open_time": "2024-11-08T15:30:00Z",
+                "cp_reveal_time": "2024-11-09T15:30:00Z",
+                "scheduled_resolve_time": "2024-12-08T15:30:00Z",
+                "actual_resolve_time": null,
+                "resolution_set_time": null,
+                "scheduled_close_time": "2024-11-09T15:30:00Z",
+                "actual_close_time": "2024-11-09T15:30:00Z",
+                "type": "binary",
+                "options": null,
+                "status": "open",
+                "possibilities": null,
+                "resolution": null,
+                "include_bots_in_aggregates": true,
+                "question_weight": 1.0,
+                "resolution_criteria": "This question will resolve as **Yes** if either player in the 2024 World Chess Championship match reaches 7.5 points before the 11th classical game (e.g. by winning 5 games and drawing another 5).\n\nThis question will also resolve as **Yes** if for any other reason the 2024 Chess Champion is declared by FIDE before the 11th classical game is played (e.g. a player forteits the match or is disqualified during the match).",
+                "fine_print": "* If the match is played by any other players than Ding Liren and Gukesh Dommaraju, the question will be **Annulled**.\n* If the result of the game 10 is not known by 7 January 2025 (and the 2024 Chess Champion is still not declared by that date) the question will resolve as **Ambiguous**.\n* If the results of one or more of the first 10 games are annulled, then these games are not included in the count of the games for the resolution. This includes the case when both players receive 0 points for the game for violating Fair Play policy.\n* If the 2024 Chess Champion title is later revoked (e.g. due to revealed fact of cheating), it will not affect the question resolution.",
+                "label": null,
+                "open_upper_bound": null,
+                "open_lower_bound": null,
+                "scaling": {
+                    "range_max": null,
+                    "range_min": null,
+                    "zero_point": null
+                },
+                "post_id": 29783,
+                "aggregations": {
+                    "recency_weighted": {
+                        "history": [],
+                        "latest": null,
+                        "score_data": {}
+                    },
+                    "unweighted": {
+                        "history": [],
+                        "latest": null,
+                        "score_data": {}
+                    },
+                    "single_aggregation": {
+                        "history": [],
+                        "latest": null,
+                        "score_data": {}
+                    },
+                    "metaculus_prediction": {
+                        "history": [],
+                        "latest": null,
+                        "score_data": {}
+                    }
+                },
+                "my_forecasts": {
+                    "history": [],
+                    "latest": null,
+                    "score_data": {}
+                }
+            },
+            "user_permission": "forecaster",
+            "vote": {
+                "score": 0,
+                "user_vote": null
+            },
+            "forecasts_count": 52,
+            "description": "The [World Chess Championship 2024](https://en.wikipedia.org/wiki/World_Chess_Championship_2024) match between the reigning world champion Ding Liren (Rating: 2728 as of 1 Nov 2024) and the challenger Gukesh Dommaraju (Rating: 2783 as of 1 Nov 2024) is set to take place between 25 November and 13 December 2024, in Singapore.\n\nAs of November 1st, 2024, Ding Liren is [23rd in the world](https://2700chess.com/), but was in the top 5 for 6 consecutive years, reaching as high as #2, with his top rating being the 12th highest in the history of chess. He also [used to have](https://en.chessbase.com/post/ding-liren-profile-2024-fide) the longest unbeaten streak of 100 games, until Carsen surpassed it. Gukesh D has his own [set of achievements](https://en.wikipedia.org/wiki/Gukesh_Dommaraju), being the third-youngest grandmaster in history, the third-youngest to reach a chess rating of 2700, the youngest to reach a rating of 2750, the youngest Candidates Tournament winner and the youngest contender to compete for the World Championship.\n\nThe match will be best of 14 games; a score of at least 7\u00bd would win the world championship. If the score is equal after 14 games, tiebreak games with faster time controls will be played. \n\nIn chess a win is 1 point and a draw is \u00bd point with a high tendency towards draws at the highest level.\n\nThe time control for each game in the classical portion of the match is 120 minutes per side for the first 40 moves and 30 minutes for the rest of the game, with a 30-second increment per move starting with move 41."
+        },
+        "community_prediction_at_access_time": null
     }
 ]

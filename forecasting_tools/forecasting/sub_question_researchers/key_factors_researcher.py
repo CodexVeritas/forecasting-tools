@@ -61,7 +61,7 @@ class KeyFactorsResearcher:
             metaculus_question, top_key_factors, num_key_factors_to_return
         )
         deduplicated_key_factors = await cls.__deduplicate_key_factors(
-            prioritized_key_factors
+            prioritized_key_factors, metaculus_question
         )
         logger.info(
             f"Found {len(deduplicated_key_factors)} final key factors (prioritized, deduplicated and filtering for top scores)"
@@ -171,13 +171,23 @@ class KeyFactorsResearcher:
 
     @classmethod
     async def __deduplicate_key_factors(
-        cls, key_factors: list[ScoredKeyFactor]
+        cls,
+        key_factors: list[ScoredKeyFactor],
+        metaculus_question: MetaculusQuestion,
     ) -> list[ScoredKeyFactor]:
         strings_to_check = [factor.text for factor in key_factors]
-        deduplicated_strings = (
-            await Deduplicator.deduplicate_list_one_item_at_a_time(
-                strings_to_check, use_internet_search=False
-            )
+        prompt_context = (
+            "You are an assistant to a superforecaster trying to get a list of "
+            "key factors to help answer a question on Metaculus. "
+            "You 1) want to deduplicate any that say the same thing "
+            "(thus worthless to read twice)"
+            "and 2) want to remove anything that was already in the "
+            "question's background information (duplicating background knowledge)"
+            f"\n\nQuestion: {metaculus_question.give_question_details_as_markdown()}"
+        )
+        deduplicated_strings = await Deduplicator.deduplicate_list_in_batches(
+            strings_to_check,
+            prompt_context=prompt_context,
         )
         deduplicated_factors: list[ScoredKeyFactor] = []
         for factor in key_factors:

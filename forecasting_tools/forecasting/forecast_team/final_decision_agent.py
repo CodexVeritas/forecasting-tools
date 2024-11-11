@@ -139,7 +139,6 @@ class FinalDecisionAgent:
 
             {self.question.give_question_details_as_markdown()}
 
-
             # Research Report To Summarize
             Below in the triple back tick code block, is the research report you need to summarize.
 

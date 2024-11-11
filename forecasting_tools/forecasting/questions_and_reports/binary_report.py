@@ -32,10 +32,10 @@ class BinaryReport(ForecastReport):
 
     async def publish_report_to_metaculus(self) -> None:
         MetaculusApi.post_binary_question_prediction(
-            self.question.question_id, self.prediction
+            self.question.post_id, self.prediction
         )
         MetaculusApi.post_question_comment(
-            self.question.question_id, self.explanation
+            self.question.post_id, self.explanation
         )
 
     @classmethod

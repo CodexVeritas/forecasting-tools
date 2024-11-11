@@ -51,7 +51,7 @@ async def republish_reports_for_today() -> None:
         try:
             await report.publish_report_to_metaculus()
             logger.info(
-                f"Successfully published forecast for question {report.question.question_id}"
+                f"Successfully published forecast for question {report.question.post_id}"
             )
             ForecastDatabaseManager.add_forecast_report_to_database(
                 report, ForecastRunType.REGULAR_FORECAST

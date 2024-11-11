@@ -30,64 +30,67 @@ class MetaculusApi:
     Documentation for the API can be found at https://www.metaculus.com/api/
     """
 
-    AI_WARMUP_TOURNAMENT_ID = 3294
-    AI_COMPETITION_ID_Q3 = 3349
-    AI_COMPETITION_ID_Q4 = 32506
+    AI_WARMUP_TOURNAMENT_ID = (
+        3294  # https://www.metaculus.com/tournament/ai-benchmarking-warmup/
+    )
+    AI_COMPETITION_ID_Q3 = 3349  # https://www.metaculus.com/tournament/aibq3/
+    AI_COMPETITION_ID_Q4 = 32506  # https://www.metaculus.com/tournament/aibq4/
     Q3_2024_QUARTERLY_CUP = 3366
     Q4_2024_QUARTERLY_CUP = 3672
     CURRENT_QUARTERLY_CUP_ID = Q4_2024_QUARTERLY_CUP
 
-    API_BASE_URL = "https://www.metaculus.com/api2"
+    API_BASE_URL = "https://www.metaculus.com/api"
+    OLD_API_BASE_URL = "https://www.metaculus.com/api2"
     MAX_QUESTIONS_FROM_QUESTION_API_PER_REQUEST = 100
 
     @classmethod
-    def post_question_comment(
-        cls, question_id: int, comment_text: str
-    ) -> None:
+    def post_question_comment(cls, post_id: int, comment_text: str) -> None:
         response = requests.post(
-            f"{cls.API_BASE_URL}/comments/",
+            f"{cls.API_BASE_URL}/comments/create/",
             json={
-                "comment_text": comment_text,
-                "submit_type": "N",
-                "include_latest_prediction": True,
-                "question": question_id,
+                "on_post": post_id,
+                "text": comment_text,
+                "is_private": True,
+                "included_forecast": True,
             },
             **cls.__get_auth_headers(),  # type: ignore
         )
-        logger.info(f"Posted comment on question {question_id}")
+        logger.info(f"Posted comment on question {post_id}")
         raise_for_status_with_additional_info(response)
 
     @classmethod
     def post_binary_question_prediction(
-        cls, question_id: int, prediction_in_decimal: float
+        cls, post_id: int, prediction_in_decimal: float
     ) -> None:
-        logger.info(f"Posting prediction on question {question_id}")
+        logger.info(f"Posting prediction on question {post_id}")
         if prediction_in_decimal < 0.01 or prediction_in_decimal > 0.99:
             raise ValueError("Prediction value must be between 0.001 and 0.99")
-        url = f"{cls.API_BASE_URL}/questions/{question_id}/predict/"
+        url = f"{cls.OLD_API_BASE_URL}/questions/{post_id}/predict/"
         response = requests.post(
             url,
             json={"prediction": float(prediction_in_decimal)},
             **cls.__get_auth_headers(),  # type: ignore
         )
-        logger.info(f"Posted prediction on question {question_id}")
+        logger.info(f"Posted prediction on question {post_id}")
         raise_for_status_with_additional_info(response)
 
     @classmethod
     def get_question_by_url(cls, question_url: str) -> MetaculusQuestion:
-        # URL looks like https://www.metaculus.com/questions/28841/will-eric-adams-be-the-nyc-mayor-on-january-1-2025/
+        """
+        URL looks like https://www.metaculus.com/questions/28841/will-eric-adams-be-the-nyc-mayor-on-january-1-2025/
+        """
         match = re.search(r"/questions/(\d+)", question_url)
         if not match:
             raise ValueError(
                 f"Could not find question ID in URL: {question_url}"
             )
         question_id = int(match.group(1))
-        return cls.get_question_by_id(question_id)
+        return cls.get_question_by_post_id(question_id)
 
     @classmethod
-    def get_question_by_id(cls, question_id: int) -> MetaculusQuestion:
-        logger.info(f"Retrieving question details for question {question_id}")
-        url = f"{cls.API_BASE_URL}/questions/{question_id}/"
+    def get_question_by_post_id(cls, post_id: int) -> MetaculusQuestion:
+        logger.info(f"Retrieving question details for question {post_id}")
+        url = f"{cls.API_BASE_URL}/posts/{post_id}/"
         response = requests.get(
             url,
             **cls.__get_auth_headers(),  # type: ignore
@@ -97,26 +100,21 @@ class MetaculusApi:
         metaculus_question = MetaculusApi.__metaculus_api_json_to_question(
             json_question
         )
-        logger.info(f"Retrieved question details for question {question_id}")
+        logger.info(f"Retrieved question details for question {post_id}")
         return metaculus_question
 
     @classmethod
-    def get_all_questions_from_tournament(
+    def get_all_open_questions_from_tournament(
         cls,
         tournament_id: int,
-        filter_by_open: bool = False,
     ) -> list[MetaculusQuestion]:
         logger.info(f"Retrieving questions from tournament {tournament_id}")
         url_qparams = {
-            "limit": cls.MAX_QUESTIONS_FROM_QUESTION_API_PER_REQUEST,
-            "offset": 0,
-            "has_group": "false",
-            "order_by": "-activity",
-            "project": tournament_id,
-            "type": "forecast",
+            "tournaments": [tournament_id],
+            "with_cp": "true",
+            "order_by": "-hotness",
+            "statuses": "open",
         }
-        if filter_by_open:
-            url_qparams["status"] = "open"
 
         metaculus_questions = cls.__get_questions_from_api(url_qparams)
         logger.info(
@@ -236,7 +234,7 @@ class MetaculusApi:
             "offset": offset,
             "limit": number_of_questions,
         }
-        questions = cls.__get_questions_from_api(params)
+        questions = cls.__get_questions_from_api(params, use_old_api=True)
         checked_questions = typeguard.check_type(
             questions, list[BinaryQuestion]
         )
@@ -246,9 +244,8 @@ class MetaculusApi:
     def _get_open_binary_questions_from_current_quarterly_cup(
         cls,
     ) -> list[BinaryQuestion]:
-        questions = cls.get_all_questions_from_tournament(
+        questions = cls.get_all_open_questions_from_tournament(
             cls.CURRENT_QUARTERLY_CUP_ID,
-            filter_by_open=True,
         )
         binary_questions = [
             question
@@ -263,19 +260,36 @@ class MetaculusApi:
 
     @classmethod
     def __get_questions_from_api(
-        cls, params: dict[str, Any]
+        cls, params: dict[str, Any], use_old_api: bool = False
     ) -> list[MetaculusQuestion]:
         num_requested = params.get("limit")
         assert (
             num_requested is None
             or num_requested <= cls.MAX_QUESTIONS_FROM_QUESTION_API_PER_REQUEST
         ), "You cannot get more than 100 questions at a time"
-        url = f"{cls.API_BASE_URL}/questions/"
+        if use_old_api:
+            url = f"{cls.OLD_API_BASE_URL}/questions/"
+        else:
+            url = f"{cls.API_BASE_URL}/posts/"
         response = requests.get(url, params=params, **cls.__get_auth_headers())  # type: ignore
         raise_for_status_with_additional_info(response)
         data = json.loads(response.content)
+        results = data["results"]
+        supported_posts = [
+            q
+            for q in results
+            if "notebook" not in q and "group_of_questions" not in q
+        ]
+        removed_posts = [
+            post for post in results if post not in supported_posts
+        ]
+        logger.warning(
+            f"Removed {len(removed_posts)} posts that "
+            "are not supported (e.g. notebook or group question)"
+        )
+
         questions = [
-            cls.__metaculus_api_json_to_question(q) for q in data["results"]
+            cls.__metaculus_api_json_to_question(q) for q in supported_posts
         ]
         return questions
 
@@ -283,17 +297,23 @@ class MetaculusApi:
     def __metaculus_api_json_to_question(
         cls, api_json: dict
     ) -> MetaculusQuestion:
-        question_type = api_json["question"]["type"]  # type: ignore
-        if question_type == "binary":
-            question = BinaryQuestion.from_metaculus_api_json(api_json)
-        elif question_type == "numeric":
-            question = NumericQuestion.from_metaculus_api_json(api_json)
-        elif question_type == "multiple_choice":
-            question = MultipleChoiceQuestion.from_metaculus_api_json(api_json)
-        elif question_type == "date":
-            question = DateQuestion.from_metaculus_api_json(api_json)
+        assert (
+            "question" in api_json
+        ), f"Question not found in API JSON: {api_json}"
+        question_type_string = api_json["question"]["type"]  # type: ignore
+        if question_type_string == BinaryQuestion.get_api_type_name():
+            question_type = BinaryQuestion
+        elif question_type_string == NumericQuestion.get_api_type_name():
+            question_type = NumericQuestion
+        elif (
+            question_type_string == MultipleChoiceQuestion.get_api_type_name()
+        ):
+            question_type = MultipleChoiceQuestion
+        elif question_type_string == DateQuestion.get_api_type_name():
+            question_type = DateQuestion
         else:
-            raise ValueError(f"Unknown question type: {question_type}")
+            raise ValueError(f"Unknown question type: {question_type_string}")
+        question = question_type.from_metaculus_api_json(api_json)
         return question
 
     @classmethod

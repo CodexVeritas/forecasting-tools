@@ -73,7 +73,9 @@ class KeyFactorsPage(ToolPage):
             "Finding key factors... This may take a minute or two..."
         ):
             question_id = cls.__extract_question_id(input.metaculus_url)
-            metaculus_question = MetaculusApi.get_question_by_id(question_id)
+            metaculus_question = MetaculusApi.get_question_by_post_id(
+                question_id
+            )
 
             with MonetaryCostManager() as cost_manager:
                 num_questions_to_research = 16

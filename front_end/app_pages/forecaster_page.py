@@ -102,7 +102,7 @@ class ForecasterPage(ToolPage):
                     return None
                 question = BinaryQuestion(
                     question_text=question_text,
-                    question_id=0,
+                    post_id=0,
                     state=QuestionState.OTHER,
                     background_info=background_info,
                     resolution_criteria=resolution_criteria,
@@ -163,8 +163,8 @@ class ForecasterPage(ToolPage):
                 with st.spinner("Fetching question details..."):
                     try:
                         question_id = cls.__extract_question_id(metaculus_url)
-                        metaculus_question = MetaculusApi.get_question_by_id(
-                            question_id
+                        metaculus_question = (
+                            MetaculusApi.get_question_by_post_id(question_id)
                         )
                         if isinstance(metaculus_question, BinaryQuestion):
                             cls.__autofill_form(metaculus_question)

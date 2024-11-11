@@ -40,8 +40,8 @@ class TeamManager:
     async def run_forecasts_on_all_open_questions(
         self, tournament_id: int
     ) -> list[ForecastReport]:
-        questions = MetaculusApi.get_all_questions_from_tournament(
-            tournament_id, filter_by_open=True
+        questions = MetaculusApi.get_all_open_questions_from_tournament(
+            tournament_id
         )
         reports = await self.__run_forecast_on_questions(questions)
         return reports
