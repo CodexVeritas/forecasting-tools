@@ -23,6 +23,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
     post_id: int = Field(
         validation_alias=AliasChoices("question_id", "post_id")
     )
+    id_of_question: int | None = None
     num_forecasters: int | None = None
     num_predictions: int | None = None
     state: QuestionState
@@ -40,8 +41,8 @@ class MetaculusQuestion(BaseModel, Jsonable):
 
     @classmethod
     def from_metaculus_api_json(cls, api_json: dict) -> MetaculusQuestion:
-        question_id = api_json["id"]
-        logger.debug(f"Processing question ID {question_id}")
+        post_id = api_json["id"]
+        logger.debug(f"Processing Post ID {post_id}")
         json_state = api_json["status"]
         question_state = (
             QuestionState.OPEN if json_state == "open" else QuestionState.OTHER
@@ -54,11 +55,12 @@ class MetaculusQuestion(BaseModel, Jsonable):
         return MetaculusQuestion(
             state=question_state,
             question_text=question_json["title"],
-            post_id=question_id,
+            post_id=post_id,
+            id_of_question=question_json["id"],
             background_info=question_json.get("description", None),
             fine_print=question_json.get("fine_print", None),
             resolution_criteria=question_json.get("resolution_criteria", None),
-            page_url=f"https://www.metaculus.com/questions/{question_id}",
+            page_url=f"https://www.metaculus.com/questions/{post_id}",
             num_forecasters=api_json["nr_forecasters"],
             num_predictions=api_json["forecasts_count"],
             close_time=cls._parse_api_date(api_json["scheduled_close_time"]),

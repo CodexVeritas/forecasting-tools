@@ -283,10 +283,11 @@ class MetaculusApi:
         removed_posts = [
             post for post in results if post not in supported_posts
         ]
-        logger.warning(
-            f"Removed {len(removed_posts)} posts that "
-            "are not supported (e.g. notebook or group question)"
-        )
+        if len(removed_posts) > 0:
+            logger.warning(
+                f"Removed {len(removed_posts)} posts that "
+                "are not supported (e.g. notebook or group question)"
+            )
 
         questions = [
             cls.__metaculus_api_json_to_question(q) for q in supported_posts

@@ -240,3 +240,4 @@ def assert_basic_question_attributes_not_none(
     ):
         assert question.community_prediction_at_access_time is not None
         assert 0 <= question.community_prediction_at_access_time <= 1
+    assert question.id_of_question is not None
