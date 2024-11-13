@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
@@ -13,6 +14,7 @@ from forecasting_tools.forecasting.questions_and_reports.report_section import (
 )
 from forecasting_tools.util.jsonable import Jsonable
 
+logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
@@ -90,32 +92,38 @@ class ForecastReport(BaseModel, Jsonable, ABC):
         final_cost: float,
         duration_in_minutes: float,
     ) -> ForecastReport:
-        assert len(reports) > 0, "No reports were provided"
-        first_report = reports[0]
-        assert all(
-            isinstance(report, type(first_report)) for report in reports
-        ), "All reports must be of the same type"
-        assert all(
-            report.question == first_report.question for report in reports
-        ), "All reports must be for the same question"
-        if len(reports) == 1:
-            return reports[0]
+        try:
+            assert len(reports) > 0, "No reports were provided"
+            first_report = reports[0]
+            assert all(
+                isinstance(report, type(first_report)) for report in reports
+            ), "All reports must be of the same type"
+            assert all(
+                report.question == first_report.question for report in reports
+            ), "All reports must be for the same question"
+            if len(reports) == 1:
+                return reports[0]
 
-        report_type = type(reports[0])
-        aggregated_prediction = await report_type.aggregate_predictions(
-            [report.prediction for report in reports]
-        )
-        combined_explanation = await cls.__create_combined_explanation(
-            reports, final_cost, duration_in_minutes
-        )
-        combined_report = report_type(
-            question=reports[0].question,
-            explanation=combined_explanation,
-            prediction=aggregated_prediction,
-            forecast_info=[report for report in reports],
-            price_estimate=final_cost,
-        )
-        return combined_report
+            report_type = type(reports[0])
+            aggregated_prediction = await report_type.aggregate_predictions(
+                [report.prediction for report in reports]
+            )
+            combined_explanation = await cls.__create_combined_explanation(
+                reports, final_cost, duration_in_minutes
+            )
+            combined_report = report_type(
+                question=reports[0].question,
+                explanation=combined_explanation,
+                prediction=aggregated_prediction,
+                forecast_info=[report for report in reports],
+                price_estimate=final_cost,
+            )
+            return combined_report
+        except Exception as e:
+            logger.exception(
+                f"Error while combining reports into one in ForecastReport: {e.__class__.__name__} Exception - {e}"
+            )
+            return reports[0]
 
     @classmethod
     async def __create_combined_explanation(
@@ -215,7 +223,7 @@ class ForecastReport(BaseModel, Jsonable, ABC):
             raise ValueError(f"Report must have at least {index + 1} sections")
         content = self.report_sections[index].text_of_section_and_subsections
         first_line = content.split("\n")[0]
-        if expected_word not in first_line.lower():
+        if expected_word.lower() not in first_line.lower():
             raise ValueError(
                 f"Section must contain the word '{expected_word}'"
             )

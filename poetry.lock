@@ -507,13 +507,13 @@ files = [
 
 [[package]]
 name = "crawl4ai"
-version = "0.3.73"
+version = "0.3.731"
 description = "🔥🕷️ Crawl4AI: Open-source LLM Friendly Web Crawler & scraper"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "Crawl4AI-0.3.73-py3-none-any.whl", hash = "sha256:72c6313866a709ff1f162d86cd18ccb57331a0abfcf7ac756366ef68579c10ad"},
-    {file = "crawl4ai-0.3.73.tar.gz", hash = "sha256:fc7c0c3ae2291e3a21f34bcc8fe98373c8ac4001ec1a0035ab5715fd175e388a"},
+    {file = "Crawl4AI-0.3.731-py3-none-any.whl", hash = "sha256:58ac02b741aa7f9cc52118c5bcf5db365a870e3d692278930fad317be7be14e5"},
+    {file = "crawl4ai-0.3.731.tar.gz", hash = "sha256:762495ce3bc119467e9f2777e450355eab6ac827ec47849ded61d6e3945811c0"},
 ]
 
 [package.dependencies]
@@ -525,12 +525,12 @@ lxml = ">=5.3,<6.0"
 numpy = ">=1.26.0,<3"
 pillow = ">=10.4,<11.0"
 playwright = ">=1.47,<1.48"
-playwright-stealth = ">=1.0,<2.0"
 python-dotenv = ">=1.0,<2.0"
 requests = ">=2.26,<3.0"
+tf-playwright-stealth = ">=1.0,<2.0"
 
 [package.extras]
-all = ["aiosqlite (>=0.20,<1.0)", "beautifulsoup4 (>=4.12,<5.0)", "html2text (>=2024.2,<2025.0)", "litellm (>=1.48,<2.0)", "lxml (>=5.3,<6.0)", "nltk", "numpy (>=1.26.0,<3)", "pillow (>=10.4,<11.0)", "playwright (>=1.47,<1.48)", "playwright-stealth (>=1.0,<2.0)", "python-dotenv (>=1.0,<2.0)", "requests (>=2.26,<3.0)", "scikit-learn", "selenium", "tokenizers", "torch", "transformers"]
+all = ["aiosqlite (>=0.20,<1.0)", "beautifulsoup4 (>=4.12,<5.0)", "html2text (>=2024.2,<2025.0)", "litellm (>=1.48,<2.0)", "lxml (>=5.3,<6.0)", "nltk", "numpy (>=1.26.0,<3)", "pillow (>=10.4,<11.0)", "playwright (>=1.47,<1.48)", "python-dotenv (>=1.0,<2.0)", "requests (>=2.26,<3.0)", "scikit-learn", "selenium", "tf-playwright-stealth (>=1.0,<2.0)", "tokenizers", "torch", "transformers"]
 cosine = ["nltk", "torch", "transformers"]
 sync = ["selenium"]
 torch = ["nltk", "scikit-learn", "torch"]
@@ -621,6 +621,16 @@ files = [
 
 [package.extras]
 testing = ["hatch", "pre-commit", "pytest", "tox"]
+
+[[package]]
+name = "fake-http-header"
+version = "0.3.5"
+description = "Generates random request fields for a http request header"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "fake_http_header-0.3.5-py3-none-any.whl", hash = "sha256:cd05f4bebf1b7e38b5f5c03d7fb820c0c17e87d9614fbee0afa39c32c7a2ad3c"},
+]
 
 [[package]]
 name = "filelock"
@@ -1678,6 +1688,17 @@ files = [
 ]
 
 [[package]]
+name = "mockito"
+version = "1.5.3"
+description = "Spying framework"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "mockito-1.5.3-py3-none-any.whl", hash = "sha256:094a5e7ebd140e6b5dcb0fc581f83616000f2b1311facc3b5e6167b906b52955"},
+    {file = "mockito-1.5.3.tar.gz", hash = "sha256:b7192840e7d70ec24639cc5e18efee5d418c83ad86c0fd2bf7e71c3e42ae0aa7"},
+]
+
+[[package]]
 name = "multidict"
 version = "6.1.0"
 description = "multidict implementation"
@@ -2215,23 +2236,6 @@ greenlet = "3.0.3"
 pyee = "12.0.0"
 
 [[package]]
-name = "playwright-stealth"
-version = "1.0.6"
-description = "playwright stealth"
-optional = false
-python-versions = ">=3, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-files = [
-    {file = "playwright-stealth-1.0.6.tar.gz", hash = "sha256:b504d951d00fac755c7d13665a29611d415180510bd7d23f14ebc89439ba2043"},
-    {file = "playwright_stealth-1.0.6-py3-none-any.whl", hash = "sha256:b1b2bcf58eb6859aa53d42c49b91c4e27b74a6d13fc3d0c85eea513dd55efda3"},
-]
-
-[package.dependencies]
-playwright = "*"
-
-[package.extras]
-test = ["pytest"]
-
-[[package]]
 name = "pluggy"
 version = "1.5.0"
 description = "plugin and hook calling mechanisms for python"
@@ -2695,6 +2699,20 @@ pytest = ">=6.2.5"
 
 [package.extras]
 dev = ["pre-commit", "pytest-asyncio", "tox"]
+
+[[package]]
+name = "pytest-mockito"
+version = "0.0.4"
+description = "Base fixtures for mockito"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pytest-mockito-0.0.4.tar.gz", hash = "sha256:40d40cdf118127dcb1e3c9e838b0d1c11d5197a23beaf10b6e3f42f9b6cb68a9"},
+]
+
+[package.dependencies]
+mockito = ">=1.0.6"
+pytest = ">=3"
 
 [[package]]
 name = "pytest-xdist"
@@ -3520,6 +3538,22 @@ files = [
 [package.extras]
 doc = ["reno", "sphinx"]
 test = ["pytest", "tornado (>=4.5)", "typeguard"]
+
+[[package]]
+name = "tf-playwright-stealth"
+version = "1.0.3"
+description = "Makes playwright stealthy like a ninja!"
+optional = false
+python-versions = "<4.0,>=3.8"
+files = [
+    {file = "tf_playwright_stealth-1.0.3-py3-none-any.whl", hash = "sha256:2d341f485eb5fc61fc7755f7f7f803e06d133ee263e0dfa632d16f9c99008f4d"},
+    {file = "tf_playwright_stealth-1.0.3.tar.gz", hash = "sha256:94353842c6517fba19da2277c5b68272f86eb6bfb056f36d66b5b8497fc96133"},
+]
+
+[package.dependencies]
+fake-http-header = ">=0.3.5,<0.4.0"
+playwright = ">=1,<2"
+pytest-mockito = ">=0.0.4,<0.0.5"
 
 [[package]]
 name = "threadpoolctl"

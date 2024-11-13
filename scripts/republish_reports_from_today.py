@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import time
+from datetime import datetime
 
 import dotenv
 
@@ -17,26 +18,38 @@ from forecasting_tools.forecasting.questions_and_reports.binary_report import (
 from forecasting_tools.util import file_manipulation
 from forecasting_tools.util.custom_logger import CustomLogger
 
+print(__name__)
 logger = logging.getLogger(__name__)
 
 
-async def republish_reports_for_today() -> None:
-
-    date_str: str = time.strftime("%Y-%m-%d")
+async def gather_reports_for_date_range(
+    start_date: datetime, end_date: datetime | None
+) -> list[BinaryReport]:
+    if end_date is None:
+        end_date = datetime.now()
     forecast_path = "logs/forecasts/forecast_team"
     absolute_forecast_path = file_manipulation.get_absolute_path(forecast_path)
 
-    # Get all files in the directory
     files = os.listdir(absolute_forecast_path)
+    logger.info(f"Found {len(files)} forecast files")
 
-    # Filter files for the specified date
-    target_files = [f for f in files if f.startswith(date_str)]
+    target_files = []
+    for file_name in files:
+        datetime_of_file = datetime.strptime(
+            file_name[:19], "%Y-%m-%d-%H-%M-%S"
+        )
+        if start_date <= datetime_of_file <= end_date:
+            target_files.append(file_name)
 
     if not target_files:
-        logger.warning(f"No forecast files found for date {date_str}")
-        return
+        logger.warning(
+            f"No forecast files found for range {start_date} to {end_date}"
+        )
+        return []
 
-    logger.info(f"Found {len(target_files)} forecast files for {date_str}")
+    logger.info(
+        f"Found {len(target_files)} forecast files for range {start_date} to {end_date}"
+    )
 
     all_reports: list[BinaryReport] = []
     for file_name in target_files:
@@ -45,7 +58,10 @@ async def republish_reports_for_today() -> None:
             file_path
         )
         all_reports.extend(reports)
+    return all_reports
 
+
+async def republish_reports(all_reports: list[BinaryReport]) -> None:
     for report in all_reports:
         assert isinstance(report, BinaryReport)
         try:
@@ -64,4 +80,12 @@ async def republish_reports_for_today() -> None:
 if __name__ == "__main__":
     dotenv.load_dotenv()
     CustomLogger.setup_logging()
-    asyncio.run(republish_reports_for_today())
+    start_date = datetime.today().replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    end_date = None
+    reports = asyncio.run(gather_reports_for_date_range(start_date, end_date))
+    logger.info(f"Found {len(reports)} reports")
+    log_path = f"logs/forecasts/republish/republish_{start_date.strftime('%Y-%m-%d')}.json"
+    BinaryReport.save_object_list_to_file_path(reports, log_path)
+    asyncio.run(republish_reports(reports))

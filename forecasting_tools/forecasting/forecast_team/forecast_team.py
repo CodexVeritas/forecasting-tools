@@ -111,6 +111,7 @@ class ForecastTeam:
             self.question.question_text.replace(" ", "_")
             .replace("?", "")
             .replace(":", "")[:20]
+            .replace("/", "-")
         )
         now_as_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         return f"logs/forecasts/forecast_team/{now_as_string}-{shortened_question_text}-{self.question.post_id}.json"

@@ -133,9 +133,15 @@ class MetaculusApi:
         filtered_questions = cls.__filter_retrieved_benchmark_questions(
             questions, num_of_questions_to_return
         )
-        return cls.__get_random_sample_of_questions(
+        questions = cls.__get_random_sample_of_questions(
             filtered_questions, num_of_questions_to_return, random_seed
         )
+        for question in questions:
+            try:
+                assert not question.api_json["question"]["include_bots_in_aggregates"]  # type: ignore
+            except KeyError:
+                pass
+        return questions
 
     @classmethod
     def __get_auth_headers(cls) -> dict[str, dict[str, str]]:

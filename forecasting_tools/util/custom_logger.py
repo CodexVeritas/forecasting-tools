@@ -38,11 +38,12 @@ class CustomLogger:
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.DEBUG)
 
-        # Watchdog logs are a little overkill when streaming to stdout
+        # Prevent watchdog logs from propagating to root logger
         watchdog_logger = logging.getLogger(
             "watchdog.observers.inotify_buffer"
         )
         watchdog_logger.setLevel(logging.WARNING)
+        watchdog_logger.propagate = False
 
         handlers = []
 
