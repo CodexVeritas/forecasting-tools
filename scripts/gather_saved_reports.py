@@ -88,4 +88,4 @@ if __name__ == "__main__":
     logger.info(f"Found {len(reports)} reports")
     log_path = f"logs/forecasts/republish/republish_{start_date.strftime('%Y-%m-%d')}.json"
     BinaryReport.save_object_list_to_file_path(reports, log_path)
-    asyncio.run(republish_reports(reports))
+    # asyncio.run(republish_reports(reports))
