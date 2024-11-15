@@ -19,6 +19,7 @@ class BenchmarkPage(AppPage):
         "GPT-4O for research and GPT-O1 for final decision": "2024-11-06_00-05-28__q4_initial_bot__score_0.0079__git_b666874.json",
         "Claude 3.5 Sonnet for all tasks": "2024-11-06_19-32-35__q4_initial_bot_anthropic__score_0.024__git_a7572c1.json",
         "Screenshot Feature": "2024-11-13__screenshoting__git_4247052.json",
+        "Screenshot with smart searcher reverted": "2024-11-14_15-30-10__screenshot_with_smart_searcher_reverted__score_0.0384__git_ed2053f.json",
         # "Claude 3.5 Sonnet Incomplete (5 questions)": "2024-11-06_11-05-17__q4_initial_bot_with_anthropic__score_0.0092.json",
         # "Research Format Update": "2024-08-30_17-22-42__research_format_update__score_0.0802.json",
         # "Original Bot": "2024-08-30_16-46-19__original_bot__score_0.0657.json",

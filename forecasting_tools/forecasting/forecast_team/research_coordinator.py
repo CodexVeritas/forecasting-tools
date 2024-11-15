@@ -25,6 +25,7 @@ from forecasting_tools.forecasting.sub_question_researchers.question_router impo
 from forecasting_tools.util import async_batching
 from forecasting_tools.util.async_batching import (
     run_coroutines_while_removing_and_logging_exceptions,
+    wrap_coroutines_with_timeout,
 )
 
 logger = logging.getLogger(__name__)
@@ -69,15 +70,18 @@ class ResearchCoordinator:
         urls = self.__extract_urls_from_markdown_text(question_details)
 
         if not urls:
-            return "# Question Details\nNo links found in question details."
+            return "No links found in question details."
 
         screenshot_tasks = [
             self.__get_screenshot_and_summary(url) for url in urls
         ]
+        timed_screenshot_tassks = wrap_coroutines_with_timeout(
+            screenshot_tasks, timeout_time=60
+        )
 
         summaries, successful_urls = (
             run_coroutines_while_removing_and_logging_exceptions(
-                screenshot_tasks, urls
+                timed_screenshot_tassks, urls
             )
         )
 
