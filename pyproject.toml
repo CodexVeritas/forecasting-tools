@@ -43,6 +43,8 @@ scikit-learn = "^1.5.2"
 crawl4ai = "^0.3.73"
 
 [tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+notebook = "^7.2.2"
 streamlit = "^1.36.0"
 scipy = "^1.12.0"
 pytest = "^8.3.2"

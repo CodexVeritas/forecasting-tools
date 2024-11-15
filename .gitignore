@@ -5,6 +5,7 @@ temp
 .personal/
 .sandbox/
 sandbox.py
+sandbox.ipynb
 
 
 .DS_Store
