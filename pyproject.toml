@@ -41,6 +41,7 @@ typeguard = "^4.3.0"
 pre-commit = "^4.0.1"
 scikit-learn = "^1.5.2"
 crawl4ai = "^0.3.73"
+dspy = "^2.5.29"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
