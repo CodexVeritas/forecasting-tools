@@ -44,6 +44,8 @@ crawl4ai = "^0.3.73"
 dspy = "^2.5.29"
 
 [tool.poetry.group.dev.dependencies]
+seaborn = "^0.13.2"
+matplotlib = "^3.9.2"
 ipykernel = "^6.29.5"
 notebook = "^7.2.2"
 streamlit = "^1.36.0"
