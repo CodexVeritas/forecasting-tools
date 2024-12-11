@@ -274,6 +274,7 @@ class SmartSearcher(OutputsText, AiModel):
                 ")", "%29"
             )
             text_fragment = text_fragment.replace("-", "%2D").strip(",")
+            text_fragment = text_fragment.replace(" ", "%20")
             fragment_url = f"{highlight.source.url}#:~:text={text_fragment}"
 
             if self.use_citation_brackets:
