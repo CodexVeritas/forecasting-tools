@@ -96,14 +96,12 @@ async def test_filtered_invoke() -> None:
     model = ExaSearcher(
         num_results=num_results, include_highlights=False, include_text=True
     )
-    exclude_domains = ["alliance.health"]
     search = SearchInput(
         web_search_query="coronavirus",
         highlight_query=None,
         include_domains=[],
-        exclude_domains=exclude_domains,
+        exclude_domains=["alliance.health"],
         include_text="pregnancy",
-        exclude_text="symptoms",
         start_published_date=datetime(2022, 11, 1),
         end_published_date=datetime(2022, 11, 30),
     )
@@ -117,13 +115,11 @@ async def test_filtered_invoke() -> None:
         assert source.published_date <= search.end_published_date
         assert source.published_date >= search.start_published_date
         assert search.include_text is not None
-        assert search.exclude_text is not None
         assert search.include_text in source.text
-        assert search.exclude_text not in source.text
         assert source.url is not None
         assert all(
             exclude_domain not in source.url
-            for exclude_domain in exclude_domains
+            for exclude_domain in search.exclude_domains
         )
         assert len(source.highlights) == 0
         assert len(source.highlight_scores) == 0

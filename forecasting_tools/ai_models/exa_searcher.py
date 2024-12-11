@@ -70,9 +70,6 @@ class SearchInput(BaseModel, Jsonable):
     include_text: str | None = Field(
         description="A 1-5 word phrase that must be exactly present in the text of the search results"
     )
-    exclude_text: str | None = Field(
-        description="A 1-5 word phrase that must not be present in the text of the search results"
-    )
     start_published_date: datetime | None = Field(
         description="The earliest publication date for search results"
     )
@@ -212,8 +209,6 @@ class ExaSearcher(
             payload["endPublishedDate"] = search.end_published_date.isoformat()
         if search.include_text:
             payload["includeText"] = [search.include_text]
-        if search.exclude_text:
-            payload["excludeText"] = [search.exclude_text]
 
         return url, headers, payload
 
@@ -225,7 +220,6 @@ class ExaSearcher(
             include_domains=[],
             exclude_domains=[],
             include_text=None,
-            exclude_text=None,
             start_published_date=None,
             end_published_date=None,
         )

@@ -247,24 +247,6 @@ class MetaculusApi:
         return checked_questions
 
     @classmethod
-    def _get_open_binary_questions_from_current_quarterly_cup(
-        cls,
-    ) -> list[BinaryQuestion]:
-        questions = cls.get_all_open_questions_from_tournament(
-            cls.CURRENT_QUARTERLY_CUP_ID,
-        )
-        binary_questions = [
-            question
-            for question in questions
-            if isinstance(question, BinaryQuestion)
-        ]
-        assert all(
-            isinstance(question, BinaryQuestion)
-            for question in binary_questions
-        )
-        return binary_questions  # type: ignore
-
-    @classmethod
     def __get_questions_from_api(
         cls, params: dict[str, Any], use_old_api: bool = False
     ) -> list[MetaculusQuestion]:
@@ -284,7 +266,9 @@ class MetaculusApi:
         supported_posts = [
             q
             for q in results
-            if "notebook" not in q and "group_of_questions" not in q
+            if "notebook" not in q
+            and "group_of_questions" not in q
+            and "conditional" not in q
         ]
         removed_posts = [
             post for post in results if post not in supported_posts

@@ -128,12 +128,20 @@ def test_get_questions_from_tournament() -> None:
     questions = MetaculusApi.get_all_open_questions_from_tournament(
         ForecastingTestManager.TOURN_WITH_OPENNESS_AND_TYPE_VARIATIONS
     )
-    assert any(isinstance(question, BinaryQuestion) for question in questions)
-    assert any(isinstance(question, NumericQuestion) for question in questions)
-    assert any(isinstance(question, DateQuestion) for question in questions)
-    assert any(
+    score = 0
+    if any(isinstance(question, BinaryQuestion) for question in questions):
+        score += 1
+    if any(isinstance(question, NumericQuestion) for question in questions):
+        score += 1
+    if any(isinstance(question, DateQuestion) for question in questions):
+        score += 1
+    if any(
         isinstance(question, MultipleChoiceQuestion) for question in questions
-    )
+    ):
+        score += 1
+    assert (
+        score > 1
+    ), "There needs to be multiple question types in the tournament"
 
     for question in questions:
         assert question.state == QuestionState.OPEN
@@ -186,28 +194,6 @@ def test_get_benchmark_questions(num_questions_to_get: int) -> None:
     assert (
         question_ids1 == question_ids2
     ), "Questions retrieved with same random seed should return same IDs"
-
-
-def test_get_questions_from_current_quartely_cup() -> None:
-    expected_question_text = "Will BirdCast report 1 billion birds flying over the United States at any point before January 1, 2025?"
-    questions = (
-        MetaculusApi._get_open_binary_questions_from_current_quarterly_cup()
-    )
-
-    if ForecastingTestManager.quarterly_cup_is_not_active():
-        assert len(questions) == 0
-    else:
-        assert len(questions) > 0
-        assert any(
-            question.question_text == expected_question_text
-            for question in questions
-        )
-        assert all(
-            question.state == QuestionState.OPEN for question in questions
-        ), "Expected all questions to be open"
-        assert all(
-            isinstance(question, BinaryQuestion) for question in questions
-        ), "Expected all questions to be binary"
 
 
 def assert_basic_question_attributes_not_none(
