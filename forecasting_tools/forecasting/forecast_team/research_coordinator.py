@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import logging
-import re
 
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
 from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
-from forecasting_tools.forecasting.helpers.url_scraper import UrlScraper
 from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
     MetaculusQuestion,
 )
@@ -23,10 +21,6 @@ from forecasting_tools.forecasting.sub_question_researchers.question_router impo
     QuestionRouter,
 )
 from forecasting_tools.util import async_batching
-from forecasting_tools.util.async_batching import (
-    run_coroutines_while_removing_and_logging_exceptions,
-    wrap_coroutines_with_timeout,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -45,73 +39,16 @@ class ResearchCoordinator:
         num_base_rate_questions: int,
         num_base_rate_questions_with_deep_research: int,
     ) -> str:
-        question_details_markdown = (
-            await self.__generate_question_details_markdown()
-        )
         background_markdown = await self.generate_background_markdown(
-            num_of_background_questions, question_details_markdown
+            num_of_background_questions,
         )
         base_rate_markdown = await self.generate_base_rate_markdown(
             num_base_rate_questions,
             num_base_rate_questions_with_deep_research,
             background_markdown,
         )
-        combined_markdown = (
-            question_details_markdown
-            + "\n\n"
-            + background_markdown
-            + "\n\n"
-            + base_rate_markdown
-        )
+        combined_markdown = background_markdown + "\n\n" + base_rate_markdown
         return combined_markdown
-
-    async def __generate_question_details_markdown(self) -> str:
-        question_details = self.question.give_question_details_as_markdown()
-        urls = self.__extract_urls_from_markdown_text(question_details)
-
-        if not urls:
-            return "No links found in question details."
-
-        screenshot_tasks = [
-            self.__get_screenshot_and_summary(url) for url in urls
-        ]
-        timed_screenshot_tassks = wrap_coroutines_with_timeout(
-            screenshot_tasks, timeout_time=60
-        )
-
-        summaries, successful_urls = (
-            run_coroutines_while_removing_and_logging_exceptions(
-                timed_screenshot_tassks, urls
-            )
-        )
-
-        markdown = await self.__create_question_answer_markdown_section(
-            [f"What does {url} say?" for url in successful_urls],
-            summaries,
-            question_prepend="L",
-        )
-        return markdown
-
-    def __extract_urls_from_markdown_text(self, text: str) -> list[str]:
-        markdown_link_pattern = r"\[([^\]]+)\]\(([^)]+)\)"
-        matches = re.findall(markdown_link_pattern, text)
-        return list(set(url for _, url in matches))
-
-    async def __get_screenshot_and_summary(
-        self,
-        url: str,
-    ) -> str:
-        logger.info(f"Attempting to get screenshot and summary for {url}")
-        url_scraper = UrlScraper()
-        image_data = await url_scraper.get_screenshot_of_url_as_base64(url)
-        prompt = f"You are a superforecast. Please research and write a report on the following question: {self.question.give_question_details_as_markdown()}"
-        summary = await UrlScraper.get_summary_of_screenshot(
-            image_data, prompt
-        )
-        logger.info(
-            f"Successfully got summary for {url}. Summary: {summary[:1000]}..."
-        )
-        return summary
 
     async def make_list_of_base_rate_reports(
         self,

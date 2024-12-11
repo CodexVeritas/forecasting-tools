@@ -24,5 +24,5 @@ source ../.venv/bin/activate
 which python
 
 # Install playwright
-playwright install
-playwright install-deps
+# playwright install
+# playwright install-deps
