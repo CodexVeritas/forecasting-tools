@@ -5,12 +5,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from code_tests.no_cost_expect_all_to_succeed.test_ai_models.ai_mock_manager import (
+from code_tests.unit_tests.test_ai_models.ai_mock_manager import (
     AiModelMockManager,
 )
-from code_tests.no_cost_expect_all_to_succeed.test_ai_models.models_to_test import (
-    ModelsToTest,
-)
+from code_tests.unit_tests.test_ai_models.models_to_test import ModelsToTest
 from code_tests.utilities_for_tests import coroutine_testing
 from forecasting_tools.ai_models.basic_model_interfaces.ai_model import AiModel
 from forecasting_tools.ai_models.claude35sonnet import Claude35Sonnet

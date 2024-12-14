@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from code_tests.no_cost_expect_all_to_succeed.test_forecasting.forecasting_test_manager import (
+from code_tests.unit_tests.test_forecasting.forecasting_test_manager import (
     ForecastingTestManager,
 )
 from forecasting_tools.forecasting.forecast_team.team_manager import (

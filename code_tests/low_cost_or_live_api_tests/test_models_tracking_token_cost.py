@@ -2,9 +2,7 @@ import asyncio
 
 import pytest
 
-from code_tests.no_cost_expect_all_to_succeed.test_ai_models.models_to_test import (
-    ModelsToTest,
-)
+from code_tests.unit_tests.test_ai_models.models_to_test import ModelsToTest
 from forecasting_tools.ai_models.ai_utils.response_types import (
     TextTokenCostResponse,
 )

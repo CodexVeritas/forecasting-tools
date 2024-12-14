@@ -1,6 +1,6 @@
 import pytest
 
-from code_tests.no_cost_expect_all_to_succeed.test_frontend.front_end_test_utils import (
+from code_tests.unit_tests.test_frontend.front_end_test_utils import (
     FrontEndTestUtils,
 )
 from front_end.app_pages.benchmark_page import BenchmarkPage
