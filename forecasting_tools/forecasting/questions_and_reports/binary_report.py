@@ -4,6 +4,7 @@ import re
 import statistics
 from datetime import datetime
 
+import numpy as np
 from pydantic import AliasChoices, Field, field_validator
 
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
@@ -54,18 +55,25 @@ class BinaryReport(ForecastReport):
         return self.question.community_prediction_at_access_time
 
     @property
-    def deviation_score(self) -> float | None:
-        community_prediction = self.community_prediction
-        if community_prediction is None:
+    def expected_log_score(self) -> float | None:
+        """
+        Expected log score is evaluated to correlate closes to the baseline score
+        when assuming the community prediction is the true probability.
+        (see scripts/simulate_a_tournament.ipynb)
+        """
+        c = self.community_prediction
+        p = self.prediction
+        if c is None:
             return None
-        return abs(community_prediction - self.prediction) ** 2
+        expected_log_score = c * np.log2(p) + (1 - c) * np.log2(1 - p)
+        return expected_log_score
 
     @staticmethod
     def calculate_average_deviation_score(
         reports: list[BinaryReport],
     ) -> float:
         deviation_scores: list[float | None] = [
-            report.deviation_score for report in reports
+            report.expected_log_score for report in reports
         ]
         validated_deviation_scores: list[float] = []
         for score in deviation_scores:

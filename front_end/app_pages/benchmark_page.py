@@ -136,14 +136,16 @@ class BenchmarkPage(AppPage):
         sorted_reports = sorted(
             report_list,
             key=lambda r: (
-                r.deviation_score if r.deviation_score is not None else -1
+                r.expected_log_score
+                if r.expected_log_score is not None
+                else -1
             ),
             reverse=True,
         )
         for report in sorted_reports:
             deviation = (
-                report.deviation_score
-                if report.deviation_score is not None
+                report.expected_log_score
+                if report.expected_log_score is not None
                 else -1
             )
             st.write(
