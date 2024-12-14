@@ -8,7 +8,7 @@ from forecasting_tools.ai_models.resource_managers.monetary_cost_manager import 
 from forecasting_tools.forecasting.forecast_team.forecast_team import (
     ForecastTeam,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     MetaculusQuestion,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_organizer import (

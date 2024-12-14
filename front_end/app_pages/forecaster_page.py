@@ -16,7 +16,7 @@ from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     BinaryQuestion,
     QuestionState,
 )
@@ -102,7 +102,7 @@ class ForecasterPage(ToolPage):
                     return None
                 question = BinaryQuestion(
                     question_text=question_text,
-                    post_id=0,
+                    id_of_post=0,
                     state=QuestionState.OTHER,
                     background_info=background_info,
                     resolution_criteria=resolution_criteria,

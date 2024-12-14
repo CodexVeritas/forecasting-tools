@@ -3,19 +3,32 @@ import random
 import re
 from datetime import datetime
 
+from pydantic import BaseModel
+
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
 from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
 from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ForecastReport,
     ReasonedPrediction,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     NumericQuestion,
 )
 
 logger = logging.getLogger(__name__)
 
-NumericDistribution = list[tuple[float, float]]
+
+class Percentile(BaseModel):
+    value: float
+    percentile: float
+
+
+class NumericDistribution(BaseModel):
+    percentiles: list[Percentile]
+
+    @property
+    def cdf(self) -> list[float]:
+        raise NotImplementedError("Not implemented")
 
 
 class NumericReport(ForecastReport):

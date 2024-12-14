@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     MetaculusQuestion,
     QuestionState,
 )
@@ -94,7 +94,7 @@ async def _process_question(question: str | MetaculusQuestion) -> dict:
         question = MetaculusQuestion(
             question_text=question,
             background_info=background_info,
-            post_id=0,
+            id_of_post=0,
             state=QuestionState.OPEN,
             page_url="",
             api_json={},

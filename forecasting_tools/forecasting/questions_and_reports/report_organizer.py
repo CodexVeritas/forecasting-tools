@@ -1,14 +1,13 @@
+from pydantic import BaseModel
+
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.date_report import (
-    DateReport,
-)
 from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ForecastReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     BinaryQuestion,
     DateQuestion,
     MetaculusQuestion,
@@ -23,28 +22,34 @@ from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
 )
 
 
+class TypeMapping(BaseModel):
+    question_type: type[MetaculusQuestion]
+    test_question_id: int
+    report_type: type[ForecastReport] | None
+
+
 class ReportOrganizer:
     __TYPE_MAPPING = [
-        {
-            "type": BinaryQuestion,
-            "test_question_id": 384,  # https://www.metaculus.com/questions/384/
-            "report_type": BinaryReport,
-        },
-        {
-            "type": NumericQuestion,
-            "test_question_id": 26253,  # https://www.metaculus.com/questions/26253/
-            "report_type": NumericReport,
-        },
-        {
-            "type": DateQuestion,
-            "test_question_id": 5121,  # https://www.metaculus.com/questions/5121/
-            "report_type": DateReport,
-        },
-        {
-            "type": MultipleChoiceQuestion,
-            "test_question_id": 21465,  # https://www.metaculus.com/questions/21465/
-            "report_type": MultipleChoiceReport,
-        },
+        TypeMapping(
+            question_type=BinaryQuestion,
+            test_question_id=384,  # https://www.metaculus.com/questions/384/
+            report_type=BinaryReport,
+        ),
+        TypeMapping(
+            question_type=NumericQuestion,
+            test_question_id=26253,  # https://www.metaculus.com/questions/26253/
+            report_type=NumericReport,
+        ),
+        TypeMapping(
+            question_type=DateQuestion,
+            test_question_id=5121,  # https://www.metaculus.com/questions/5121/
+            report_type=None,
+        ),
+        TypeMapping(
+            question_type=MultipleChoiceQuestion,
+            test_question_id=21465,  # https://www.metaculus.com/questions/21465/
+            report_type=MultipleChoiceReport,
+        ),
     ]
 
     @classmethod
@@ -52,9 +57,9 @@ class ReportOrganizer:
         cls, question_type: type[MetaculusQuestion]
     ) -> int:
         assert issubclass(question_type, MetaculusQuestion)
-        for question_info in cls.__TYPE_MAPPING:
-            if question_info["type"] == question_type:
-                return question_info["test_question_id"]
+        for mapping in cls.__TYPE_MAPPING:
+            if mapping.question_type == question_type:
+                return mapping.test_question_id
         raise ValueError(f"No question ID found for type {question_type}")
 
     @classmethod
@@ -62,9 +67,13 @@ class ReportOrganizer:
         cls, question_type: type[MetaculusQuestion]
     ) -> type[ForecastReport]:
         assert issubclass(question_type, MetaculusQuestion)
-        for question_info in cls.__TYPE_MAPPING:
-            if question_info["type"] == question_type:
-                return question_info["report_type"]
+        for mapping in cls.__TYPE_MAPPING:
+            if mapping.question_type == question_type:
+                if mapping.report_type is None:
+                    raise ValueError(
+                        f"No report type found for type {question_type}"
+                    )
+                return mapping.report_type
         raise ValueError(f"No report type found for type {question_type}")
 
     @classmethod
@@ -82,10 +91,11 @@ class ReportOrganizer:
     @classmethod
     def get_all_report_types(cls) -> list[type[ForecastReport]]:
         return [
-            question_info["report_type"]
-            for question_info in cls.__TYPE_MAPPING
+            mapping.report_type
+            for mapping in cls.__TYPE_MAPPING
+            if mapping.report_type is not None
         ]
 
     @classmethod
     def get_all_question_types(cls) -> list[type[MetaculusQuestion]]:
-        return [question_info["type"] for question_info in cls.__TYPE_MAPPING]
+        return [mapping.question_type for mapping in cls.__TYPE_MAPPING]

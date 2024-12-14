@@ -20,8 +20,8 @@ class QuestionState(Enum):
 class MetaculusQuestion(BaseModel, Jsonable):
     question_text: str
     page_url: str | None = None
-    post_id: int = Field(
-        validation_alias=AliasChoices("question_id", "post_id")
+    id_of_post: int = Field(
+        validation_alias=AliasChoices("question_id", "post_id", "id_of_post")
     )
     id_of_question: int | None = None
     num_forecasters: int | None = None
@@ -55,7 +55,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
         return MetaculusQuestion(
             state=question_state,
             question_text=question_json["title"],
-            post_id=post_id,
+            id_of_post=post_id,
             id_of_question=question_json["id"],
             background_info=question_json.get("description", None),
             fine_print=question_json.get("fine_print", None),
@@ -200,8 +200,8 @@ class DateQuestion(MetaculusQuestion, BoundedQuestionMixin):
 class NumericQuestion(MetaculusQuestion, BoundedQuestionMixin):
     upper_bound: float
     lower_bound: float
-    upper_bound_is_hard_limit: bool
-    lower_bound_is_hard_limit: bool
+    open_upper_bound: bool
+    open_lower_bound: bool
 
     @classmethod
     def from_metaculus_api_json(cls, api_json: dict) -> NumericQuestion:
@@ -215,8 +215,8 @@ class NumericQuestion(MetaculusQuestion, BoundedQuestionMixin):
         return NumericQuestion(
             upper_bound=upper_bound,
             lower_bound=lower_bound,
-            upper_bound_is_hard_limit=not open_upper_bound,
-            lower_bound_is_hard_limit=not open_lower_bound,
+            open_upper_bound=open_upper_bound,
+            open_lower_bound=open_lower_bound,
             **normal_metaculus_question.model_dump(),
         )
 

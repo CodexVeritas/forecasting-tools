@@ -9,7 +9,7 @@ from streamlit.delta_generator import DeltaGenerator
 from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     BinaryQuestion,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_section import (
@@ -90,7 +90,7 @@ class ReportDisplayer:
         assert all(section.section_content is not None for section in sections)
 
         tab_names = [section.title or "Untitled" for section in sections]
-        show_question_details = report.question.post_id > 0
+        show_question_details = report.question.id_of_post > 0
         if show_question_details:
             tab_names.append("Question Details")
         tabs = st.tabs(tab_names)
@@ -163,8 +163,8 @@ class ReportDisplayer:
                 st.write(
                     f"**Scheduled Resolution Time:** {question.scheduled_resolution_time}"
                 )
-            if question.post_id > 0:
-                st.write(f"**Question ID:** {question.post_id}")
+            if question.id_of_post > 0:
+                st.write(f"**Question ID:** {question.id_of_post}")
 
     @classmethod
     def __display_nested_sections(

@@ -13,7 +13,7 @@ from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     BinaryQuestion,
     MetaculusQuestion,
 )

@@ -14,7 +14,7 @@ from forecasting_tools.forecasting.questions_and_reports.forecast_report import 
     ForecastReport,
     ReasonedPrediction,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     BinaryQuestion,
 )
 
@@ -33,10 +33,10 @@ class BinaryReport(ForecastReport):
 
     async def publish_report_to_metaculus(self) -> None:
         MetaculusApi.post_binary_question_prediction(
-            self.question.post_id, self.prediction
+            self.question.id_of_post, self.prediction
         )
         MetaculusApi.post_question_comment(
-            self.question.post_id, self.explanation
+            self.question.id_of_post, self.explanation
         )
 
     @classmethod

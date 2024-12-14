@@ -16,7 +16,7 @@ from forecasting_tools.forecasting.forecast_team.research_coordinator import (
 from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     ForecastReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     BinaryQuestion,
     DateQuestion,
     MetaculusQuestion,
@@ -114,4 +114,4 @@ class ForecastTeam:
             .replace("/", "-")
         )
         now_as_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        return f"logs/forecasts/forecast_team/{now_as_string}-{shortened_question_text}-{self.question.post_id}.json"
+        return f"logs/forecasts/forecast_team/{now_as_string}-{shortened_question_text}-{self.question.id_of_post}.json"

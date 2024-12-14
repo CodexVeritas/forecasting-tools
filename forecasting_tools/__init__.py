@@ -26,13 +26,13 @@ from forecasting_tools.forecasting.helpers.metaculus_api import (
 from forecasting_tools.forecasting.helpers.smart_searcher import (
     SmartSearcher as SmartSearcher,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     BinaryQuestion as BinaryQuestion,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     MetaculusQuestion as MetaculusQuestion,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_question import (
+from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     QuestionState as QuestionState,
 )
 from forecasting_tools.forecasting.sub_question_researchers.base_rate_researcher import (
