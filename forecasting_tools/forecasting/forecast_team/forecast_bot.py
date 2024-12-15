@@ -45,10 +45,17 @@ class ForecastBot(ABC):
 
     def __init__(
         self,
+        *,
         research_reports_per_question: int = 3,
         predictions_per_research_report: int = 5,
         use_research_summary_to_forecast: bool = True,
     ) -> None:
+        assert (
+            research_reports_per_question > 0
+        ), "Must run at least one research report"
+        assert (
+            predictions_per_research_report > 0
+        ), "Must run at least one prediction"
         self.research_reports_per_question = research_reports_per_question
         self.predictions_per_research_report = predictions_per_research_report
         self.use_research_summary_to_forecast = (
@@ -98,7 +105,8 @@ class ForecastBot(ABC):
                 for reasoned_prediction in research_prediction_collection.predictions
             ]
             aggregated_prediction = await report_type.aggregate_predictions(
-                all_predictions
+                all_predictions,
+                question,
             )
             end_time = time.time()
             time_spent_in_minutes = (end_time - start_time) / 60
@@ -249,8 +257,8 @@ class ForecastBot(ABC):
             # SUMMARY
             *Question*: {question.question_text}\n
             *Final Prediction*: {report_type.make_readable_prediction(aggregated_prediction)}\n
-            *Total Cost*: ${round(final_cost, 2)}
-            *Time Spent*: {time_spent_in_minutes:.2f} minutes
+            *Total Cost*: ${round(final_cost,2)}
+            *Time Spent*: {round(time_spent_in_minutes, 2)} minutes
 
             {combined_summaries}
 

@@ -65,7 +65,9 @@ class ForecastReport(BaseModel, Jsonable, ABC):
 
     @classmethod
     @abstractmethod
-    async def aggregate_predictions(cls, predictions: list[T]) -> T:
+    async def aggregate_predictions(
+        cls, predictions: list[T], question: MetaculusQuestion
+    ) -> T:
         raise NotImplementedError(
             "Subclass must implement this abstract method"
         )

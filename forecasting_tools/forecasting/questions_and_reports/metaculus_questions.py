@@ -149,7 +149,7 @@ class BoundedQuestionMixin:
     @classmethod
     def _get_bounds_from_api_json(
         cls, api_json: dict
-    ) -> tuple[bool, bool, float, float]:
+    ) -> tuple[bool, bool, float, float, float | None]:
         try:
             open_upper_bound = api_json["question"]["open_upper_bound"]  # type: ignore
             open_lower_bound = api_json["question"]["open_lower_bound"]  # type: ignore
@@ -162,10 +162,17 @@ class BoundedQuestionMixin:
 
         upper_bound = api_json["question"]["scaling"]["range_max"]  # type: ignore
         lower_bound = api_json["question"]["scaling"]["range_min"]  # type: ignore
+        zero_point = api_json["question"]["scaling"]["zero_point"]  # type: ignore
 
         assert isinstance(upper_bound, float), f"Upper bound is {upper_bound}"
         assert isinstance(lower_bound, float), f"Lower bound is {lower_bound}"
-        return open_upper_bound, open_lower_bound, upper_bound, lower_bound
+        return (
+            open_upper_bound,
+            open_lower_bound,
+            upper_bound,
+            lower_bound,
+            zero_point,
+        )
 
 
 class DateQuestion(MetaculusQuestion, BoundedQuestionMixin):
@@ -173,6 +180,7 @@ class DateQuestion(MetaculusQuestion, BoundedQuestionMixin):
     lower_bound: datetime
     upper_bound_is_hard_limit: bool
     lower_bound_is_hard_limit: bool
+    zero_point: datetime | None = None
 
     @classmethod
     def from_metaculus_api_json(cls, api_json: dict) -> DateQuestion:
@@ -182,7 +190,13 @@ class DateQuestion(MetaculusQuestion, BoundedQuestionMixin):
             open_lower_bound,
             unparsed_upper_bound,
             unparsed_lower_bound,
+            zero_point,
         ) = cls._get_bounds_from_api_json(api_json)
+
+        if zero_point is not None:
+            raise NotImplementedError(
+                "Zero point not implemented for date questions yet"
+            )
 
         return DateQuestion(
             upper_bound=cls._parse_api_date(unparsed_upper_bound),
@@ -202,13 +216,18 @@ class NumericQuestion(MetaculusQuestion, BoundedQuestionMixin):
     lower_bound: float
     open_upper_bound: bool
     open_lower_bound: bool
+    zero_point: float | None = None
 
     @classmethod
     def from_metaculus_api_json(cls, api_json: dict) -> NumericQuestion:
         normal_metaculus_question = super().from_metaculus_api_json(api_json)
-        open_upper_bound, open_lower_bound, upper_bound, lower_bound = (
-            cls._get_bounds_from_api_json(api_json)
-        )
+        (
+            open_upper_bound,
+            open_lower_bound,
+            upper_bound,
+            lower_bound,
+            zero_point,
+        ) = cls._get_bounds_from_api_json(api_json)
         assert isinstance(upper_bound, float)
         assert isinstance(lower_bound, float)
 
@@ -217,6 +236,7 @@ class NumericQuestion(MetaculusQuestion, BoundedQuestionMixin):
             lower_bound=lower_bound,
             open_upper_bound=open_upper_bound,
             open_lower_bound=open_lower_bound,
+            zero_point=zero_point,
             **normal_metaculus_question.model_dump(),
         )
 
