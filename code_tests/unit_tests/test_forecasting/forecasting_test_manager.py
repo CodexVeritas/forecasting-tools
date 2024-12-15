@@ -106,3 +106,13 @@ class ForecastingTestManager:
         is_first_10_days = day_of_month <= 10
 
         return is_first_month_of_quarter and is_first_10_days
+
+    @staticmethod
+    def mock_getting_benchmark_questions(mocker: Mock) -> Mock:
+        mock_function = mocker.patch(
+            f"{MetaculusApi.get_benchmark_questions.__module__}.{MetaculusApi.get_benchmark_questions.__qualname__}"
+        )
+        mock_function.return_value = [
+            ForecastingTestManager.get_question_safe_to_pull_and_push_to()
+        ]
+        return mock_function

@@ -1,4 +1,3 @@
-import math
 import textwrap
 
 import dotenv
@@ -84,16 +83,18 @@ class BenchmarkPage(AppPage):
     def __display_stats_for_report_type(
         cls, reports: list[BinaryReport], title: str
     ) -> None:
-        deviation_score = BinaryReport.calculate_average_deviation_score(
+        average_expected_log_score = (
+            BinaryReport.calculate_average_expected_log_score(reports)
+        )
+        average_deviation = BinaryReport.calculate_average_deviation_points(
             reports
         )
-        actual_deviation = math.sqrt(deviation_score)
         st.markdown(
             f"""
             #### {title}
             - Number of Questions: {len(reports)}
-            - Deviation Score: {deviation_score:.4f}
-            - Interpretation: On average, there is a {actual_deviation:.2%} difference between community and bot
+            - Expected Log Score (lower is better): {average_expected_log_score:.4f}
+            - Average Deviation: On average, there is a {average_deviation:.2%} percentage point difference between community and bot
             """
         )
 
@@ -136,16 +137,16 @@ class BenchmarkPage(AppPage):
         sorted_reports = sorted(
             report_list,
             key=lambda r: (
-                r.expected_log_score
-                if r.expected_log_score is not None
+                r.inversed_expected_log_score
+                if r.inversed_expected_log_score is not None
                 else -1
             ),
             reverse=True,
         )
         for report in sorted_reports:
             deviation = (
-                report.expected_log_score
-                if report.expected_log_score is not None
+                report.inversed_expected_log_score
+                if report.inversed_expected_log_score is not None
                 else -1
             )
             st.write(

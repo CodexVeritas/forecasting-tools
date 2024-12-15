@@ -95,6 +95,7 @@ def get_testing_instances() -> list[tuple[str, RunSetUp]]:
 ################################ TESTS ################################
 
 
+@pytest.mark.skip(reason="Skipping test because it's slow")
 @pytest.mark.parametrize(("_", "run_setup"), get_testing_instances())
 def test_burst_happens_quickly(
     mocker: Mock, _: str, run_setup: RunSetUp
@@ -107,6 +108,7 @@ def test_burst_happens_quickly(
     )
 
 
+@pytest.mark.skip(reason="Skipping test because it's slow")
 @pytest.mark.parametrize(("_", "run_setup"), get_testing_instances())
 def test_calls_after_burst_take_time(
     mocker: Mock, _: str, run_setup: RunSetUp

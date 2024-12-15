@@ -273,8 +273,8 @@ class ForecastBot(ABC):
         full_explanation_without_summary = clean_indents(
             f"""
             # SUMMARY
-            *Question*: {question.question_text}\n
-            *Final Prediction*: {report_type.make_readable_prediction(aggregated_prediction)}\n
+            *Question*: {question.question_text}
+            *Final Prediction*: {report_type.make_readable_prediction(aggregated_prediction)}
             *Total Cost*: ${round(final_cost,2)}
             *Time Spent*: {round(time_spent_in_minutes, 2)} minutes
 

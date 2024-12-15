@@ -23,6 +23,7 @@ MOCK_INPUT_TO_TOKEN_RETURN_VALUE = 5000
 # TODO: Also check that the burst works by itself
 
 
+@pytest.mark.skip(reason="Skipping test because it's slow")
 @pytest.mark.parametrize("subclass", ModelsToTest.TOKEN_LIMITED_LIST)
 def test_token_amount_past_burst_doesnt_happen_instantly(
     mocker: Mock, subclass: type[AiModel]

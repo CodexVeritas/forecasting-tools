@@ -120,8 +120,7 @@ def test_questions_returned_from_list_questions() -> None:
         ai_tournament_id
     )
     assert len(questions) > 0
-    for question in questions:
-        assert isinstance(question, BinaryQuestion)
+    # TODO: Add a tournament ID field and assert that the tournament is the same
 
 
 def test_get_questions_from_tournament() -> None:

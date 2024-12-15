@@ -26,6 +26,7 @@ from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
 
 
 class TemplateBot(ForecastBot):
+    FINAL_DECISION_LLM = AdvancedLlm(temperature=0.7)
 
     async def run_research(self, question: MetaculusQuestion) -> str:
         system_prompt = clean_indents(
@@ -94,8 +95,7 @@ class TemplateBot(ForecastBot):
             You write your rationale and then the last thing you write is your final answer as: "Probability: ZZ%", 0-100
             """
         )
-        final_prediction_model = AdvancedLlm()
-        gpt_forecast = await final_prediction_model.invoke(prompt)
+        gpt_forecast = await self.FINAL_DECISION_LLM.invoke(prompt)
         prediction = self._extract_forecast_from_binary_rationale(gpt_forecast)
         reasoning = (
             gpt_forecast
@@ -151,8 +151,7 @@ class TemplateBot(ForecastBot):
             Remember that its very easy to be overconfident. 10% should feel like "this couldn't possibly get below this number!", and probability of 90% should feel like "There is not chance this will get anywhere above this number!"
             """
         )
-        final_prediction_model = AdvancedLlm(temperature=0.7)
-        reasoning = await final_prediction_model.invoke(prompt)
+        reasoning = await self.FINAL_DECISION_LLM.invoke(prompt)
         prediction = self._extract_forecast_from_numeric_rationale(
             reasoning, question
         )

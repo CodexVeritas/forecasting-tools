@@ -66,9 +66,9 @@ class Benchmarker:
         )
         assert len(questions) == num_questions_to_benchmark_on
         typeguard.check_type(questions, list[BinaryQuestion])
-        reports = await forecast_bot.forecast_questions(questions, publish=False)  # type: ignore
+        reports = await forecast_bot.forecast_questions(questions)  # type: ignore
         typeguard.check_type(reports, list[BinaryReport])
-        average_deviation_score = BinaryReport.calculate_average_deviation_score(
+        average_deviation_score = BinaryReport.calculate_average_expected_log_score(
             reports  # type: ignore
         )
         rounded_score = round(average_deviation_score, 4)

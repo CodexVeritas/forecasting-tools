@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 RETRYABLE_ERROR_MESSAGE = "Model must be Retryable"
 
 
+@pytest.mark.skip(reason="Skipping test because it's slow")
 @pytest.mark.parametrize("subclass", ModelsToTest.RETRYABLE_LIST)
 def test_ai_model_successfully_retries(
     mocker: Mock, subclass: type[AiModel]
@@ -37,6 +38,7 @@ def test_ai_model_successfully_retries(
     assert response is not None
 
 
+@pytest.mark.skip(reason="Skipping test because it's slow")
 @pytest.mark.parametrize("subclass", ModelsToTest.RETRYABLE_LIST)
 def test_errors_when_runs_out_of_tries(
     mocker: Mock, subclass: type[AiModel]

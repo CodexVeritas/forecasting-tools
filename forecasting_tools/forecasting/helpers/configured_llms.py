@@ -3,7 +3,6 @@ from forecasting_tools.ai_models.gpt4ovision import (
     Gpt4oVision,
     Gpt4VisionInput,
 )
-from forecasting_tools.ai_models.gpto1 import GptO1
 
 
 class BasicLlm(Gpt4o):
@@ -11,7 +10,7 @@ class BasicLlm(Gpt4o):
     pass
 
 
-class AdvancedLlm(GptO1):
+class AdvancedLlm(Gpt4o):
     pass
 
 

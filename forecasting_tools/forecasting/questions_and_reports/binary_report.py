@@ -52,25 +52,34 @@ class BinaryReport(ForecastReport):
         return self.question.community_prediction_at_access_time
 
     @property
-    def expected_log_score(self) -> float | None:
+    def inversed_expected_log_score(self) -> float | None:
         """
-        Expected log score is evaluated to correlate closes to the baseline score
+        Expected log score is evaluated to correlate closest to the baseline score
         when assuming the community prediction is the true probability.
-        (see scripts/simulate_a_tournament.ipynb)
+        (see scripts/simulate_a_tournament.ipynb).
+        We invert the expected log score so it behaves like a brier score
+        (where it is positive and lower is better).
         """
         c = self.community_prediction
         p = self.prediction
         if c is None:
             return None
         expected_log_score = c * np.log2(p) + (1 - c) * np.log2(1 - p)
-        return expected_log_score
+        inversed_expected_log_score = -1 * expected_log_score
+        return inversed_expected_log_score
+
+    @property
+    def deviation_points(self) -> float | None:
+        if self.community_prediction is None:
+            return None
+        return abs(self.prediction - self.community_prediction)
 
     @staticmethod
-    def calculate_average_deviation_score(
+    def calculate_average_expected_log_score(
         reports: list[BinaryReport],
     ) -> float:
         deviation_scores: list[float | None] = [
-            report.expected_log_score for report in reports
+            report.inversed_expected_log_score for report in reports
         ]
         validated_deviation_scores: list[float] = []
         for score in deviation_scores:
@@ -80,3 +89,16 @@ class BinaryReport(ForecastReport):
             validated_deviation_scores
         )
         return average_deviation_score
+
+    @staticmethod
+    def calculate_average_deviation_points(
+        reports: list[BinaryReport],
+    ) -> float:
+        validated_deviation_points: list[float] = []
+        for report in reports:
+            assert report.deviation_points is not None
+            validated_deviation_points.append(report.deviation_points)
+        assert validated_deviation_points
+        return sum(validated_deviation_points) / len(
+            validated_deviation_points
+        )

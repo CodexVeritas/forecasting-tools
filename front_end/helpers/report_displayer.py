@@ -73,8 +73,8 @@ class ReportDisplayer:
         sorted_reports = sorted(
             copy_of_reports,
             key=lambda r: (
-                r.expected_log_score
-                if r.expected_log_score is not None
+                r.inversed_expected_log_score
+                if r.inversed_expected_log_score is not None
                 else float("inf")
             ),
             reverse=True,

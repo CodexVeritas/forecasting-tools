@@ -9,7 +9,6 @@ from forecasting_tools.forecasting.questions_and_reports.forecast_report import 
 )
 from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
     BinaryQuestion,
-    DateQuestion,
     MetaculusQuestion,
     MultipleChoiceQuestion,
     NumericQuestion,
@@ -32,22 +31,22 @@ class ReportOrganizer:
     __TYPE_MAPPING = [
         TypeMapping(
             question_type=BinaryQuestion,
-            test_question_id=384,  # https://www.metaculus.com/questions/384/
+            test_question_id=578,  # https://www.metaculus.com/questions/578/human-extinction-by-2100/
             report_type=BinaryReport,
         ),
         TypeMapping(
             question_type=NumericQuestion,
-            test_question_id=26253,  # https://www.metaculus.com/questions/26253/
+            test_question_id=14333,  # https://www.metaculus.com/questions/14333/age-of-oldest-human-as-of-2100/
             report_type=NumericReport,
         ),
-        TypeMapping(
-            question_type=DateQuestion,
-            test_question_id=5121,  # https://www.metaculus.com/questions/5121/
-            report_type=None,
-        ),
+        # TypeMapping(
+        #     question_type=DateQuestion,
+        #     test_question_id=4110,  # https://www.metaculus.com/questions/4110/birthdate-of-oldest-living-human-in-2200/
+        #     report_type=None,
+        # ),
         TypeMapping(
             question_type=MultipleChoiceQuestion,
-            test_question_id=21465,  # https://www.metaculus.com/questions/21465/
+            test_question_id=22427,  # https://www.metaculus.com/questions/22427/number-of-new-leading-ai-labs/
             report_type=MultipleChoiceReport,
         ),
     ]
