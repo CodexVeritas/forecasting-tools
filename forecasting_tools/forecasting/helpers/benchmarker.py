@@ -4,7 +4,7 @@ from typing import Literal
 
 import typeguard
 
-from forecasting_tools.forecasting.forecast_team.forecast_bot import (
+from forecasting_tools.forecasting.forecast_bots.forecast_bot import (
     ForecastBot,
 )
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
@@ -21,10 +21,10 @@ class Benchmarker:
     @classmethod
     async def benchmark_forecast_bot(
         cls,
+        forecast_bot: ForecastBot,
         evaluation_depth_or_number_of_questions_to_test: (
             Literal["shallow", "medium", "deep"] | int
         ),
-        forecast_bot: ForecastBot,
     ) -> float:
         """
         Below are the conclusions of a rough (and potentially flawed)simulation of tournaments and skill levels
@@ -66,7 +66,7 @@ class Benchmarker:
         )
         assert len(questions) == num_questions_to_benchmark_on
         typeguard.check_type(questions, list[BinaryQuestion])
-        reports = await forecast_bot.run_multiple_questions(questions, publish=False)  # type: ignore
+        reports = await forecast_bot.forecast_questions(questions, publish=False)  # type: ignore
         typeguard.check_type(reports, list[BinaryReport])
         average_deviation_score = BinaryReport.calculate_average_deviation_score(
             reports  # type: ignore

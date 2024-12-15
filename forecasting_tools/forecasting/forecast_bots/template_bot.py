@@ -2,7 +2,8 @@ import re
 from datetime import datetime
 
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
-from forecasting_tools.forecasting.forecast_team.forecast_bot import (
+from forecasting_tools.ai_models.perplexity import Perplexity
+from forecasting_tools.forecasting.forecast_bots.forecast_bot import (
     ForecastBot,
 )
 from forecasting_tools.forecasting.helpers.configured_llms import AdvancedLlm
@@ -24,36 +25,34 @@ from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
 )
 
 
-class DefaultForecastBot(ForecastBot):
-
-    def __init__(
-        self,
-        *args,
-        number_of_background_questions_to_ask: int = 3,
-        number_of_base_rate_questions_to_ask: int = 3,
-        number_of_base_rates_to_do_deep_research_on: int = 0,
-        **kwargs,
-    ) -> None:
-        super().__init__(
-            *args,
-            **kwargs,
-        )
-        self.number_of_background_questions_to_ask = (
-            number_of_background_questions_to_ask
-        )
-        self.number_of_base_rate_questions_to_ask = (
-            number_of_base_rate_questions_to_ask
-        )
-        self.number_of_base_rates_to_do_deep_research_on = (
-            number_of_base_rates_to_do_deep_research_on
-        )
+class TemplateBot(ForecastBot):
 
     async def run_research(self, question: MetaculusQuestion) -> str:
-        raise NotImplementedError(
-            "DefaultForecastBot does not implement run_research"
+        system_prompt = clean_indents(
+            """
+            You are an assistant to a superforecaster.
+            The superforecaster will give you a question they intend to forecast on.
+            To be a great assistant, you generate a concise but detailed rundown of the most relevant news, including if the question would resolve Yes or No based on current information.
+            You do not produce forecasts yourself.
+            """
         )
+        prompt = clean_indents(
+            f"""
+            Please give a concise research report on the below question given the below context:
+            Question:
+            {question.question_text}
 
-    async def run_forecast_on_binary(
+            {question.background_info}
+
+            {question.resolution_criteria}
+
+            {question.fine_print}
+            """
+        )
+        response = await Perplexity(system_prompt=system_prompt).invoke(prompt)
+        return response
+
+    async def _run_forecast_on_binary(
         self, question: BinaryQuestion, research: str
     ) -> ReasonedPrediction[float]:
         assert isinstance(
@@ -106,14 +105,14 @@ class DefaultForecastBot(ForecastBot):
             prediction_value=prediction, reasoning=reasoning
         )
 
-    async def run_forecast_on_multiple_choice(
+    async def _run_forecast_on_multiple_choice(
         self, question: MultipleChoiceQuestion, research: str
     ) -> ReasonedPrediction[PredictedOptionSet]:
         raise NotImplementedError(
             "DefaultForecastBot does not implement run_forecast_on_multiple_choice"
         )
 
-    async def run_forecast_on_numeric(
+    async def _run_forecast_on_numeric(
         self, question: NumericQuestion, research: str
     ) -> ReasonedPrediction[NumericDistribution]:
         prompt = clean_indents(
@@ -203,8 +202,8 @@ class DefaultForecastBot(ForecastBot):
                 )
             return NumericDistribution(
                 declared_percentiles=percentiles,
-                open_upper_bound=False,
-                open_lower_bound=False,
+                open_upper_bound=question.open_upper_bound,
+                open_lower_bound=question.open_lower_bound,
                 upper_bound=question.upper_bound,
                 lower_bound=question.lower_bound,
                 zero_point=question.zero_point,

@@ -45,7 +45,7 @@ def test_errors_if_does_not_return_expected_values(
         )
 
 
-class TestPydanticModel(BaseModel):
+class PydanticModelExample(BaseModel):
     int_value: int
     float_value: float
 
@@ -55,18 +55,18 @@ class SubPydanticModel2(BaseModel):
     list_value: list[int]
 
 
-class TestPydanticModel2(BaseModel):
+class PydanticModelExample2(BaseModel):
     str_value: str
     list_value: list[int]
     sub_model: SubPydanticModel2
     sub_model_list: list[SubPydanticModel2]
 
 
-instance_of_test_model_1 = TestPydanticModel(int_value=1, float_value=1.0)
+instance_of_test_model_1 = PydanticModelExample(int_value=1, float_value=1.0)
 sub_model_instance_1 = SubPydanticModel2(
     str_value="hello", list_value=[1, 2, 3]
 )
-instance_of_test_model_2 = TestPydanticModel2(
+instance_of_test_model_2 = PydanticModelExample2(
     str_value="hello",
     list_value=[1, 2, 3],
     sub_model=sub_model_instance_1,
@@ -102,17 +102,17 @@ instance_of_test_model_2 = TestPydanticModel2(
         (list[int], "[]", []),
         (list[dict], '[{"key":"value"}]', [{"key": "value"}]),
         (
-            TestPydanticModel,
+            PydanticModelExample,
             '{"int_value":1,"float_value":1.0,"list_value":[1,2,3]}',
             instance_of_test_model_1,
         ),
         (
-            TestPydanticModel2,
+            PydanticModelExample2,
             '{"str_value":"hello","list_value":[1,2,3],"sub_model":{"str_value":"hello","list_value":[1,2,3]},"sub_model_list":[{"str_value":"hello","list_value":[1,2,3]},{"str_value":"hello","list_value":[1,2,3]}]}',
             instance_of_test_model_2,
         ),
         (
-            list[TestPydanticModel],
+            list[PydanticModelExample],
             '[{"int_value":1,"float_value":1.0,"list_value":[1,2,3]},{"int_value":1,"float_value":1.0,"list_value":[1,2,3]}]',
             [instance_of_test_model_1, instance_of_test_model_1],
         ),
@@ -149,7 +149,7 @@ instance_of_test_model_2 = TestPydanticModel2(
         ),
         (dict, 'Here is a dictionary {"key":"value"}', {"key": "value"}),
         (
-            TestPydanticModel,
+            PydanticModelExample,
             'Here is a pydantic model: {"int_value":1,"float_value":1.0,"list_value":[1,2,3]}',
             instance_of_test_model_1,
         ),
@@ -197,7 +197,7 @@ def test_type_verification_works_for_valid_types(
         (bool, "1"),
         (list[str], "[1,2,3]"),
         (
-            TestPydanticModel,
+            PydanticModelExample,
             '{"int_value":"Hello","float_value":1.0,"list_value":[1,2,3]}',
         ),
         (

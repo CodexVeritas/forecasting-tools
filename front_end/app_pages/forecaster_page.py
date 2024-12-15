@@ -5,9 +5,7 @@ import dotenv
 import streamlit as st
 from pydantic import BaseModel, Field
 
-from forecasting_tools.forecasting.forecast_team.forecast_team import (
-    ForecastTeam,
-)
+from forecasting_tools.forecasting.forecast_bots.main_bot import MainBot
 from forecasting_tools.forecasting.helpers.forecast_database_manager import (
     ForecastDatabaseManager,
     ForecastRunType,
@@ -120,13 +118,15 @@ class ForecasterPage(ToolPage):
     @classmethod
     async def _run_tool(cls, input: ForecastInput) -> BinaryReport:
         with st.spinner("Forecasting... This may take a minute or two..."):
-            report = await ForecastTeam(
-                input.question,
-                number_of_reports_to_aggregate=1,
+            report = await MainBot(
+                research_reports_per_question=1,
+                predictions_per_research_report=5,
+                publish_reports_to_metaculus=False,
+                folder_to_save_reports_to=None,
                 number_of_background_questions_to_ask=input.num_background_questions,
                 number_of_base_rate_questions_to_ask=input.num_base_rate_questions,
                 number_of_base_rates_to_do_deep_research_on=0,
-            ).run_forecast()
+            ).forecast_question(input.question)
             assert isinstance(report, BinaryReport)
             return report
 

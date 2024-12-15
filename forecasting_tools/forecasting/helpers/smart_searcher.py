@@ -15,6 +15,9 @@ from forecasting_tools.ai_models.exa_searcher import (
     SearchInput,
 )
 from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
+from forecasting_tools.forecasting.helpers.works_cited_creator import (
+    WorksCitedCreator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +66,9 @@ class SmartSearcher(OutputsText, AiModel):
         quotes = await self.__search_for_quotes(search_terms)
         report = await self.__compile_report(quotes, prompt)
         if self.include_works_cited_list:
-            works_cited_list = self.__create_works_cited_list(quotes, report)
+            works_cited_list = WorksCitedCreator.create_works_cited_list(
+                quotes, report
+            )
             report = report + "\n\n" + works_cited_list
         final_report = self.__add_links_to_citations(report, quotes)
         return final_report, quotes
@@ -194,59 +199,6 @@ class SmartSearcher(OutputsText, AiModel):
             publish_date = highlight.source.readable_publish_date
             search_context += f'[{i+1}] "{highlight.highlight_text}". [This quote is from {url} titled "{title}", published on {publish_date}]\n'
         return search_context
-
-    @staticmethod
-    def __create_works_cited_list(
-        citations: list[ExaHighlightQuote], report: str
-    ) -> str:
-        works_cited_dict = SmartSearcher.__build_works_cited_dict(
-            citations, report
-        )
-        return SmartSearcher.__format_works_cited_list(works_cited_dict)
-
-    @staticmethod
-    def __build_works_cited_dict(
-        citations: list[ExaHighlightQuote], report: str
-    ) -> dict[str, list[tuple[int, str]]]:
-        works_cited_dict: dict[str, list[tuple[int, str]]] = {}
-        for i, citation in enumerate(citations):
-            if f"[{i+1}]" not in report:
-                continue
-            url_domain = SmartSearcher.__extract_url_domain_from_highlight(
-                citation
-            )
-            source_key = f"{citation.source.title} ({url_domain})"
-            works_cited_dict.setdefault(source_key, []).append(
-                (i + 1, citation.highlight_text)
-            )
-        return works_cited_dict
-
-    @staticmethod
-    def __extract_url_domain_from_highlight(
-        citation: ExaHighlightQuote,
-    ) -> str | None:
-        try:
-            assert citation.source.url is not None, "Source URL is None"
-            url_domain = urllib.parse.urlparse(citation.source.url).netloc
-            return url_domain
-        except Exception:
-            return citation.source.url
-
-    @staticmethod
-    def __format_works_cited_list(
-        works_cited_dict: dict[str, list[tuple[int, str]]]
-    ) -> str:
-        works_cited_list = ""
-        for source_num, (source, highlights) in enumerate(
-            works_cited_dict.items(), 1
-        ):
-            works_cited_list += f"Source {source_num}: {source}\n"
-            for citation_num, highlight in highlights:
-                works_cited_list += (
-                    f'- [{citation_num}] Quote: "{highlight}"\n'
-                )
-            works_cited_list += "\n"
-        return works_cited_list
 
     def __add_links_to_citations(
         self, report: str, highlights: list[ExaHighlightQuote]

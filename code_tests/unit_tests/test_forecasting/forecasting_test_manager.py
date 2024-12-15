@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import TypeVar
 from unittest.mock import Mock
 
-from forecasting_tools.forecasting.forecast_team.forecast_team import (
-    ForecastTeam,
+from forecasting_tools.forecasting.forecast_bots.forecast_bot import (
+    ForecastBot,
 )
 from forecasting_tools.forecasting.helpers.forecast_database_manager import (
     ForecastDatabaseManager,
@@ -73,12 +73,14 @@ class ForecastingTestManager:
         )
 
     @staticmethod
-    def mock_forecaster_team_run_forecast(mocker: Mock) -> Mock:
+    def mock_forecast_bot_forecast(
+        subclass: type[ForecastBot], mocker: Mock
+    ) -> Mock:
         test_binary_question = (
             ForecastingTestManager.get_question_safe_to_pull_and_push_to()
         )
         mock_function = mocker.patch(
-            f"{ForecastTeam.run_forecast.__module__}.{ForecastTeam.run_forecast.__qualname__}"
+            f"{subclass._run_individual_question.__module__}.{subclass._run_individual_question.__qualname__}"
         )
         assert isinstance(test_binary_question, BinaryQuestion)
         mock_function.return_value = (

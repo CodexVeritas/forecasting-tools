@@ -13,7 +13,7 @@ top_level_dir = os.path.abspath(os.path.join(current_dir, "../"))
 sys.path.append(top_level_dir)
 dotenv.load_dotenv()
 
-from forecasting_tools.forecasting.forecast_team.team_manager import (
+from forecasting_tools.forecasting.forecast_bots.team_manager import (
     TeamManager,
 )
 from forecasting_tools.forecasting.helpers.forecast_database_manager import (

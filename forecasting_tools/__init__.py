@@ -14,11 +14,11 @@ from forecasting_tools.ai_models.perplexity import Perplexity as Perplexity
 from forecasting_tools.ai_models.resource_managers.monetary_cost_manager import (
     MonetaryCostManager as MonetaryCostManager,
 )
-from forecasting_tools.forecasting.forecast_team.forecast_team import (
-    ForecastTeam as ForecastTeam,
+from forecasting_tools.forecasting.forecast_bots.main_bot import (
+    MainBot as MainBot,
 )
-from forecasting_tools.forecasting.forecast_team.team_manager import (
-    TeamManager as TeamManager,
+from forecasting_tools.forecasting.forecast_bots.template_bot import (
+    TemplateBot as TemplateBot,
 )
 from forecasting_tools.forecasting.helpers.metaculus_api import (
     MetaculusApi as MetaculusApi,

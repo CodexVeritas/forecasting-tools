@@ -61,7 +61,7 @@ def test_retry_decorator() -> None:
     assert call_count["count"] == NUMBER_OF_RETRIES
 
 
-class TestPydanticModel(BaseModel):
+class PydanticModelExample(BaseModel):
     int_value: int
     float_value: float
 
@@ -71,14 +71,14 @@ class SubPydanticModel2(BaseModel):
     list_value: list[int]
 
 
-class TestPydanticModel2(BaseModel):
+class PydanticModelExample2(BaseModel):
     str_value: str
     list_value: list[int]
     sub_model: SubPydanticModel2
 
 
-instance_of_test_model_1 = TestPydanticModel(int_value=1, float_value=1.0)
-instance_of_test_model_2 = TestPydanticModel2(
+instance_of_test_model_1 = PydanticModelExample(int_value=1, float_value=1.0)
+instance_of_test_model_2 = PydanticModelExample2(
     str_value="hello",
     list_value=[1, 2, 3],
     sub_model=SubPydanticModel2(str_value="hello", list_value=[1, 2, 3]),
@@ -113,17 +113,17 @@ instance_of_test_model_2 = TestPydanticModel2(
         (tuple[int | None, str], (None, "Hello"), True),
         (tuple[int | None, str], (1, "Hello"), True),
         (tuple[int | None, str], ("Hello", "Hello"), False),
-        (TestPydanticModel, instance_of_test_model_1, True),
-        (TestPydanticModel2, instance_of_test_model_2, True),
-        (TestPydanticModel, instance_of_test_model_2, False),
-        (TestPydanticModel2, instance_of_test_model_1, False),
+        (PydanticModelExample, instance_of_test_model_1, True),
+        (PydanticModelExample2, instance_of_test_model_2, True),
+        (PydanticModelExample, instance_of_test_model_2, False),
+        (PydanticModelExample2, instance_of_test_model_1, False),
         (
-            list[TestPydanticModel],
+            list[PydanticModelExample],
             [instance_of_test_model_1, instance_of_test_model_1],
             True,
         ),
         (
-            list[TestPydanticModel],
+            list[PydanticModelExample],
             [instance_of_test_model_1, instance_of_test_model_2],
             False,
         ),

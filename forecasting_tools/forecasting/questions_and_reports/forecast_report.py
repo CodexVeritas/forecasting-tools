@@ -74,15 +74,6 @@ class ForecastReport(BaseModel, Jsonable, ABC):
 
     @classmethod
     @abstractmethod
-    async def run_prediction(
-        cls, question: MetaculusQuestion, research: str
-    ) -> ReasonedPrediction[Any]:
-        raise NotImplementedError(
-            "Subclass must implement this abstract method"
-        )
-
-    @classmethod
-    @abstractmethod
     def make_readable_prediction(cls, prediction: Any) -> str:
         raise NotImplementedError(
             "Subclass must implement this abstract method"

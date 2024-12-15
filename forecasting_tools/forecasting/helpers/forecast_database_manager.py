@@ -30,6 +30,13 @@ class ForecastRunType(Enum):
 
 
 class ForecastDatabaseManager:
+    # NOTE: The column ids here are not sensitive information
+    # (you need the API key to publish anything), but they are hardcoded
+    # TODO: Change database to something more robust
+    # and based on environment variables (i.e. not Coda.io)
+    # NOTE: Coda was originally used in the mvp due to familiarity
+    # and quickness to make visuals and and a custom dashboard online
+
     QUESTION_COLUMN = CodaColumn("Question", "c-rDW4kf2dUl")
     BACKGROUND_INFO_COLUMN = CodaColumn("Background Info", "c-eOYV3GdLJL")
     RESOLUTION_CRITERIA_COLUMN = CodaColumn(
