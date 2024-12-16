@@ -27,8 +27,10 @@ class BinaryReport(ForecastReport):
         return v
 
     async def publish_report_to_metaculus(self) -> None:
+        if self.question.id_of_question is None:
+            raise ValueError("Question ID is None")
         MetaculusApi.post_binary_question_prediction(
-            self.question.id_of_post, self.prediction
+            self.question.id_of_question, self.prediction
         )
         MetaculusApi.post_question_comment(
             self.question.id_of_post, self.explanation

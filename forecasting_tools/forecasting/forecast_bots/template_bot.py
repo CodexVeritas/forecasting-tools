@@ -17,6 +17,7 @@ from forecasting_tools.forecasting.questions_and_reports.metaculus_questions imp
     NumericQuestion,
 )
 from forecasting_tools.forecasting.questions_and_reports.multiple_choice_report import (
+    PredictedOption,
     PredictedOptionSet,
 )
 from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
@@ -108,8 +109,50 @@ class TemplateBot(ForecastBot):
     async def _run_forecast_on_multiple_choice(
         self, question: MultipleChoiceQuestion, research: str
     ) -> ReasonedPrediction[PredictedOptionSet]:
-        raise NotImplementedError(
-            "DefaultForecastBot does not implement run_forecast_on_multiple_choice"
+        prompt = clean_indents(
+            f"""
+            You are a professional forecaster interviewing for a job.
+
+            Your interview question is:
+            {question.question_text}
+
+            The options are: {question.options}
+
+
+            Background:
+            {question.background_info}
+
+            {question.resolution_criteria}
+
+            {question.fine_print}
+
+
+            Your research assistant says:
+            {research}
+
+            Today is {datetime.now().strftime("%Y-%m-%d")}.
+
+            Before answering you write:
+            (a) The time left until the outcome to the question is known.
+            (b) The status quo outcome if nothing changed.
+            (c) A description of an scenario that results in an unexpected outcome.
+
+            You write your rationale remembering that (1) good forecasters put extra weight on the status quo outcome since the world changes slowly most of the time, and (2) good forecasters leave some moderate probability on most options to account for unexpected outcomes.
+
+            The last thing you write is your final probabilities for the N options in this order {question.options} as:
+            Option_A: Probability_A
+            Option_B: Probability_B
+            ...
+            Option_N: Probability_N
+            """
+        )
+        gpt_forecast = await self.FINAL_DECISION_LLM.invoke(prompt)
+        prediction = self._extract_forecast_from_multiple_choice_rationale(
+            gpt_forecast, question.options
+        )
+        reasoning = gpt_forecast
+        return ReasonedPrediction(
+            prediction_value=prediction, reasoning=reasoning
         )
 
     async def _run_forecast_on_numeric(
@@ -169,7 +212,9 @@ class TemplateBot(ForecastBot):
             clamped_number = min(
                 max_prediction, max(min_prediction, original_number)
             )
-            assert min_prediction <= clamped_number <= max_prediction
+            assert (
+                min_prediction <= clamped_number <= max_prediction
+            ), f"Clamped number {clamped_number} is not between {min_prediction} and {max_prediction}"
             return clamped_number / 100
         else:
             raise ValueError(
@@ -177,11 +222,65 @@ class TemplateBot(ForecastBot):
             )
 
     def _extract_forecast_from_multiple_choice_rationale(
-        self, reasoning: str
+        self, reasoning: str, options: list[str]
     ) -> PredictedOptionSet:
-        raise NotImplementedError(
-            "DefaultForecastBot does not implement _extract_forecast_from_multiple_choice_rationale"
-        )
+        option_probabilities = []
+        # Iterate through each line in the text
+        for expected_option in options:
+            probability_found = False
+            for line in reasoning.split("\n"):
+                if expected_option in line:
+                    # Extract all numbers from the line
+                    numbers = re.findall(r"-?\d+(?:,\d{3})*(?:\.\d+)?", line)
+                    numbers_no_commas = [
+                        num.replace(",", "") for num in numbers
+                    ]
+                    # Convert strings to float or int
+                    numbers = [
+                        float(num) if "." in num else int(num)
+                        for num in numbers_no_commas
+                    ]
+                    if len(numbers) >= 1:
+                        last_number = numbers[-1]
+                        option_probabilities.append(last_number)
+                        probability_found = True
+                        break
+
+            assert (
+                probability_found
+            ), f"No probability found for option: {expected_option}"
+
+        assert len(option_probabilities) == len(
+            options
+        ), f"Number of option probabilities {len(option_probabilities)} does not match number of options {len(options)}"
+
+        total_sum = sum(option_probabilities)
+        decimal_list = [x / total_sum for x in option_probabilities]
+
+        # Step 1: Clamp values
+        clamped_list = [max(min(x, 0.99), 0.01) for x in decimal_list]
+
+        # Step 2: Calculate the sum of all elements
+        total_sum = sum(clamped_list)
+
+        # Step 3: Normalize the list so that all elements add up to 1
+        normalized_list = [x / total_sum for x in clamped_list]
+
+        # Step 4: Adjust for any small floating-point errors
+        adjustment = 1.0 - sum(normalized_list)
+        normalized_list[-1] += adjustment
+        normalized_option_probabilities = normalized_list
+
+        predicted_options: list[PredictedOption] = []
+        for i in range(len(options)):
+            predicted_options.append(
+                PredictedOption(
+                    option_name=options[i],
+                    probability=normalized_option_probabilities[i],
+                )
+            )
+
+        return PredictedOptionSet(predicted_options=predicted_options)
 
     def _extract_forecast_from_numeric_rationale(
         self, reasoning: str, question: NumericQuestion

@@ -5,6 +5,7 @@ import logging
 import numpy as np
 from pydantic import BaseModel, field_validator
 
+from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ForecastReport,
 )
@@ -245,4 +246,14 @@ class NumericReport(ForecastReport):
         return readable
 
     async def publish_report_to_metaculus(self) -> None:
-        raise NotImplementedError("Format still TBD")
+        if self.question.id_of_question is None:
+            raise ValueError("Question ID is None")
+        cdf_probabilities = [
+            percentile.percentile for percentile in self.prediction.cdf
+        ]
+        MetaculusApi.post_numeric_question_prediction(
+            self.question.id_of_question, cdf_probabilities
+        )
+        MetaculusApi.post_question_comment(
+            self.question.id_of_post, self.explanation
+        )

@@ -60,18 +60,66 @@ class MetaculusApi:
 
     @classmethod
     def post_binary_question_prediction(
-        cls, post_id: int, prediction_in_decimal: float
+        cls, question_id: int, prediction_in_decimal: float
     ) -> None:
-        logger.info(f"Posting prediction on question {post_id}")
+        logger.info(f"Posting prediction on question {question_id}")
         if prediction_in_decimal < 0.01 or prediction_in_decimal > 0.99:
             raise ValueError("Prediction value must be between 0.001 and 0.99")
-        url = f"{cls.OLD_API_BASE_URL}/questions/{post_id}/predict/"
+        payload = {
+            "probability_yes": prediction_in_decimal,
+        }
+        cls._post_question_prediction(question_id, payload)
+
+    @classmethod
+    def post_numeric_question_prediction(
+        cls, question_id: int, cdf_values: list[float]
+    ) -> None:
+        """
+        If the question is numeric, forecast must be a dictionary that maps
+        quartiles or percentiles to datetimes, or a 201 value cdf.
+        In this case we use the cdf.
+        """
+        logger.info(f"Posting prediction on question {question_id}")
+        if len(cdf_values) != 201:
+            raise ValueError("CDF must contain exactly 201 values")
+        if not all(0 <= x <= 1 for x in cdf_values):
+            raise ValueError("All CDF values must be between 0 and 1")
+        if not all(a <= b for a, b in zip(cdf_values, cdf_values[1:])):
+            raise ValueError("CDF values must be monotonically increasing")
+        payload = {
+            "continuous_cdf": cdf_values,
+        }
+        cls._post_question_prediction(question_id, payload)
+
+    @classmethod
+    def post_multiple_choice_question_prediction(
+        cls, question_id: int, options_with_probabilities: dict[str, float]
+    ) -> None:
+        """
+        If the question is multiple choice, forecast must be a dictionary that
+        maps question.options labels to floats.
+        """
+        payload = {
+            "probability_yes_per_category": options_with_probabilities,
+        }
+        cls._post_question_prediction(question_id, payload)
+
+    @classmethod
+    def _post_question_prediction(
+        cls, question_id: int, forecast_payload: dict
+    ) -> None:
+        url = f"{cls.API_BASE_URL}/questions/forecast/"
         response = requests.post(
             url,
-            json={"prediction": float(prediction_in_decimal)},
+            json=[
+                {
+                    "question": question_id,
+                    **forecast_payload,
+                },
+            ],
             **cls.__get_auth_headers(),  # type: ignore
         )
-        logger.info(f"Posted prediction on question {post_id}")
+        logger.info(f"Posted prediction on question {question_id}")
         raise_for_status_with_additional_info(response)
 
     @classmethod
