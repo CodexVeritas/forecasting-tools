@@ -1,9 +1,8 @@
-import asyncio
 import logging
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
+from typing import Any, Coroutine, cast
 
 from pydantic import BaseModel
 
@@ -53,6 +52,7 @@ class ForecastBot(ABC):
         use_research_summary_to_forecast: bool = False,
         publish_reports_to_metaculus: bool = False,
         folder_to_save_reports_to: str | None = None,
+        skip_previously_forecasted_questions: bool = False,
     ) -> None:
         assert (
             research_reports_per_question > 0
@@ -67,6 +67,9 @@ class ForecastBot(ABC):
         )
         self.folder_to_save_reports_to = folder_to_save_reports_to
         self.publish_reports_to_metaculus = publish_reports_to_metaculus
+        self.skip_previously_forecasted_questions = (
+            skip_previously_forecasted_questions
+        )
 
     async def forecast_on_tournament(
         self,
@@ -75,6 +78,7 @@ class ForecastBot(ABC):
         questions = MetaculusApi.get_all_open_questions_from_tournament(
             tournament_id
         )
+
         return await self.forecast_questions(questions)
 
     async def forecast_question(
@@ -90,18 +94,32 @@ class ForecastBot(ABC):
         self,
         questions: list[MetaculusQuestion],
     ) -> list[ForecastReport]:
-        if isinstance(questions, MetaculusQuestion):
-            questions = [questions]
+        if self.skip_previously_forecasted_questions:
+            unforecasted_questions = [
+                question
+                for question in questions
+                if not question.already_forecasted
+            ]
+            if len(questions) != len(unforecasted_questions):
+                logger.info(
+                    f"Skipping {len(questions) - len(unforecasted_questions)} previously forecasted questions"
+                )
+            questions = unforecasted_questions
         reports: list[ForecastReport] = []
-        for question in questions:
-            report = await self._run_individual_question(question)
-            reports.append(report)
-        if self.publish_reports_to_metaculus:
-            for report in reports:
-                await report.publish_report_to_metaculus()
+        reports, _ = (
+            async_batching.run_coroutines_while_removing_and_logging_exceptions(
+                [
+                    self._run_individual_question(question)
+                    for question in questions
+                ]
+            )
+        )
         if self.folder_to_save_reports_to:
             file_path = self.__create_file_path_to_save_to(questions)
-            report.save_object_list_to_file_path(reports, file_path)
+            ForecastReport.save_object_list_to_file_path(reports, file_path)
+        async_batching.run_coroutines_while_removing_and_logging_exceptions(
+            [report.publish_report_to_metaculus() for report in reports]
+        )
         return reports
 
     async def _run_individual_question(
@@ -118,6 +136,8 @@ class ForecastBot(ABC):
                     tasks
                 )
             )
+            if len(research_with_predictions_unit) == 0:
+                raise ValueError("All research reports/predictions failed")
             report_type = ReportOrganizer.get_report_type_for_question_type(
                 type(question)
             )
@@ -203,12 +223,20 @@ class ForecastBot(ABC):
         else:
             raise ValueError(f"Unknown question type: {type(question)}")
 
-        reasoned_predictions = await asyncio.gather(
-            *[
+        tasks = cast(
+            list[Coroutine[Any, Any, ReasonedPrediction[Any]]],
+            [
                 forecast_function(question, research_to_use)
                 for _ in range(self.predictions_per_research_report)
-            ]
+            ],
         )
+        reasoned_predictions, _ = (
+            async_batching.run_coroutines_while_removing_and_logging_exceptions(
+                tasks
+            )
+        )
+        if len(reasoned_predictions) == 0:
+            raise ValueError("All predictions failed")
 
         return ResearchWithPredictions(
             research_report=research,
@@ -233,12 +261,12 @@ class ForecastBot(ABC):
         rationales = []
         for i, collection in enumerate(research_prediction_collections):
             forecaster_prediction_bullet_points = ""
-            for forecast in collection.predictions:
+            for j, forecast in enumerate(collection.predictions):
                 readable_prediction = report_type.make_readable_prediction(
                     forecast.prediction_value
                 )
                 forecaster_prediction_bullet_points += (
-                    f"- *Forecaster {i + 1}*: {readable_prediction}\n"
+                    f"*Forecaster {j + 1}*: {readable_prediction}\n"
                 )
 
             new_summary = clean_indents(

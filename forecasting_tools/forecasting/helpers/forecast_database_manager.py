@@ -1,8 +1,8 @@
 import logging
 from enum import Enum
 
-from forecasting_tools.forecasting.questions_and_reports.binary_report import (
-    BinaryReport,
+from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
+    ForecastReport,
 )
 from forecasting_tools.forecasting.sub_question_researchers.base_rate_researcher import (
     BaseRateReport,
@@ -71,7 +71,7 @@ class ForecastDatabaseManager:
 
     @staticmethod
     def add_forecast_report_to_database(
-        metaculus_report: BinaryReport, run_type: ForecastRunType
+        metaculus_report: ForecastReport, run_type: ForecastRunType
     ) -> None:
         metaculus_report_copy = metaculus_report.model_copy()
         coda_row = ForecastDatabaseManager._turn_report_into_coda_row(
@@ -129,18 +129,18 @@ class ForecastDatabaseManager:
 
     @classmethod
     def _turn_report_into_coda_row(
-        cls, report: BinaryReport | BaseRateReport, run_type: ForecastRunType
+        cls, report: ForecastReport | BaseRateReport, run_type: ForecastRunType
     ) -> CodaRow:
         """
         This function turns a metaculus report into a coda row
         """
-        if isinstance(report, BinaryReport):
+        if isinstance(report, ForecastReport):
             question_text = report.question.question_text
             background_info = report.question.background_info
             resolution_criteria = report.question.resolution_criteria
             fine_print = report.question.fine_print
             page_url = report.question.page_url
-            prediction = report.prediction
+            prediction = str(report.prediction)
             try:
                 explanation = (
                     report.summary

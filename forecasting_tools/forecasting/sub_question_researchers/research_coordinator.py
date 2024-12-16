@@ -378,20 +378,20 @@ class ResearchCoordinator:
             An example is given in triple backticks below for the question of "Will North Korea conduct a nuclear test before 2025?".
 
             ```
-            ### Research Overview
+            #### Research Overview
             Recent activities and statements by North Korean officials indicate a continued focus on their nuclear program, with plans to increase weapon-grade nuclear materials and arsenal. The nearly complete Experimental Light Water Reactor (ELWR) at Yongbyon could significantly boost plutonium production. North Korea has declared itself an "irreversible" nuclear power, preparing for a "real war" and threatening to turn the Pacific into a "firing range" [Q1]. These developments suggest a heightened commitment to advancing nuclear capabilities, potentially influencing the likelihood of a seventh nuclear test before 2025.
             North Korea has historically timed nuclear tests to coincide with significant international events, such as U.S. elections, to maximize attention and influence diplomatic dynamics. This pattern suggests a potential nuclear test around the 2024 U.S. Presidential Election to leverage international focus and influence the incoming administration's policy stance [Q2]. However, the Economist Intelligence Unit predicts North Korea may refrain from nuclear tests in 2023-24 due to economic dependence on China, which opposes further nuclear development [Q3].
 
-            ### Possible Base Rates
+            #### Possible Base Rates
             - Since North Korea began nuclear testing in 2006, it has conducted nuclear tests within three months of a U.S. Presidential Election on two occasions. There have been 4 U.S. Presidential Elections between 2006 and today (Oct 20 2024). 2/4 = 50% chance of a test within three months of a U.S. Presidential Election [B1].
             - Historically, North Korea has conducted six nuclear tests, with varying degrees of advance warning from credible sources [B2].
             - North Korea has a history of conducting nuclear tests following public statements about advancing their nuclear capabilities [B3].
 
-            ### Pros
+            #### Pros
             - North Korea has a history of timing its nuclear tests and missile launches to coincide with significant international events, including U.S. elections, to maximize global attention and potentially influence diplomatic dynamics [Q2].
             - The president of South Korea said that he expects North Korea to conduct a nuclear test before 2025 [Q3].
 
-            ### Cons
+            #### Cons
             - The Economist Intelligence Unit (EIU) predicts that North Korea may refrain from conducting nuclear tests in 2023-24 due to its economic dependence on China, which opposes further nuclear development [Q3].
             - Though there is a pattern of signs or reports of activity at nuclear sites, the exact timing of tests has been upredictable in the past and can vary between 0 to 3 months of the related indicating event if it happens at all [B2].
             ```

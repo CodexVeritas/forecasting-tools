@@ -12,7 +12,7 @@ from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
 from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
-    BinaryQuestion,
+    MetaculusQuestion,
 )
 
 
@@ -65,11 +65,11 @@ class Benchmarker:
             # Choose a random seed so all benchmarks in a similar time period use the same questions
         )
         assert len(questions) == num_questions_to_benchmark_on
-        typeguard.check_type(questions, list[BinaryQuestion])
-        reports = await forecast_bot.forecast_questions(questions)  # type: ignore
-        typeguard.check_type(reports, list[BinaryReport])
-        average_deviation_score = BinaryReport.calculate_average_expected_log_score(
-            reports  # type: ignore
+        questions = typeguard.check_type(questions, list[MetaculusQuestion])
+        reports = await forecast_bot.forecast_questions(questions)
+        reports = typeguard.check_type(reports, list[BinaryReport])
+        average_deviation_score = (
+            BinaryReport.calculate_average_expected_log_score(reports)
         )
         rounded_score = round(average_deviation_score, 4)
         git_hash = cls.__get_git_commit_hash()

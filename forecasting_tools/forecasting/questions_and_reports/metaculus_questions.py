@@ -38,20 +38,36 @@ class MetaculusQuestion(BaseModel, Jsonable):
         description="The API JSON response used to create the question",
         default_factory=dict,
     )
+    already_forecasted: bool = False
 
     @classmethod
-    def from_metaculus_api_json(cls, api_json: dict) -> MetaculusQuestion:
-        post_id = api_json["id"]
+    def from_metaculus_api_json(cls, post_api_json: dict) -> MetaculusQuestion:
+        post_id = post_api_json["id"]
         logger.debug(f"Processing Post ID {post_id}")
-        json_state = api_json["status"]
+        json_state = post_api_json["status"]
         question_state = (
             QuestionState.OPEN if json_state == "open" else QuestionState.OTHER
         )
         scheduled_resolution_time = cls._parse_api_date(
-            api_json["scheduled_resolve_time"]
+            post_api_json["scheduled_resolve_time"]
         )
         resolution_time_is_in_past = scheduled_resolution_time < datetime.now()
-        question_json: dict = api_json["question"]
+        question_json: dict = post_api_json["question"]
+
+        try:
+            forecast_values = question_json["my_forecasts"]["latest"][  # type: ignore
+                "forecast_values"
+            ]
+            is_forecasted = forecast_values is not None
+        except Exception:
+            is_forecasted = False
+
+        actual_resolve_time = (
+            cls._parse_api_date(question_json["actual_resolve_time"])
+            if question_json["actual_resolve_time"]
+            else None
+        )
+
         return MetaculusQuestion(
             state=question_state,
             question_text=question_json["title"],
@@ -61,20 +77,19 @@ class MetaculusQuestion(BaseModel, Jsonable):
             fine_print=question_json.get("fine_print", None),
             resolution_criteria=question_json.get("resolution_criteria", None),
             page_url=f"https://www.metaculus.com/questions/{post_id}",
-            num_forecasters=api_json["nr_forecasters"],
-            num_predictions=api_json["forecasts_count"],
-            close_time=cls._parse_api_date(api_json["scheduled_close_time"]),
-            actual_resolution_time=(
-                scheduled_resolution_time
-                if resolution_time_is_in_past
-                else None
-            ),  # TODO: Is the scheduled resolution time actually ever the 'actual' resolution time?
+            num_forecasters=post_api_json["nr_forecasters"],
+            num_predictions=post_api_json["forecasts_count"],
+            close_time=cls._parse_api_date(
+                post_api_json["scheduled_close_time"]
+            ),
+            actual_resolution_time=actual_resolve_time,
             scheduled_resolution_time=(
                 scheduled_resolution_time
                 if not resolution_time_is_in_past
                 else None
             ),
-            api_json=api_json,
+            already_forecasted=is_forecasted,
+            api_json=post_api_json,
         )
 
     @classmethod

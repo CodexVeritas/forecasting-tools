@@ -6,6 +6,7 @@ from typing import (
     TypeGuard,
     TypeVar,
     Union,
+    cast,
     get_args,
     get_origin,
 )
@@ -47,6 +48,7 @@ def retry_async_function(tries: int) -> Callable:
 
 def validate_complex_type(value: T, expected_type: type[T]) -> TypeGuard[T]:
     # NOTE: Consider using typeguard.check_type instead of this function
+    value = cast(expected_type, value)
     origin = get_origin(expected_type)
     args = get_args(expected_type)
 

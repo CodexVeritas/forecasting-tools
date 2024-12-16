@@ -1,7 +1,12 @@
 import logging
 import re
+from typing import Any, TypeVar, cast
 
 import requests
+
+from forecasting_tools.ai_models.ai_utils.ai_misc import validate_complex_type
+
+T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
 
@@ -34,3 +39,9 @@ def extract_url_from_markdown_link(markdown_link: str) -> str:
         raise ValueError(
             "Citation must be in the markdown friendly format [number](url)"
         )
+
+
+def cast_and_check_type(value: Any, expected_type: type[T]) -> T:
+    if not validate_complex_type(value, expected_type):
+        raise ValueError(f"Value {value} is not of type {expected_type}")
+    return cast(expected_type, value)

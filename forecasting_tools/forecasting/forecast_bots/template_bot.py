@@ -2,11 +2,11 @@ import re
 from datetime import datetime
 
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
+from forecasting_tools.ai_models.gpt4o import Gpt4o
 from forecasting_tools.ai_models.perplexity import Perplexity
 from forecasting_tools.forecasting.forecast_bots.forecast_bot import (
     ForecastBot,
 )
-from forecasting_tools.forecasting.helpers.configured_llms import AdvancedLlm
 from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ReasonedPrediction,
 )
@@ -27,7 +27,7 @@ from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
 
 
 class TemplateBot(ForecastBot):
-    FINAL_DECISION_LLM = AdvancedLlm(temperature=0.7)
+    FINAL_DECISION_LLM = Gpt4o(temperature=0.7)
 
     async def run_research(self, question: MetaculusQuestion) -> str:
         system_prompt = clean_indents(
@@ -40,15 +40,14 @@ class TemplateBot(ForecastBot):
         )
         prompt = clean_indents(
             f"""
-            Please give a concise research report on the below question given the below context:
             Question:
             {question.question_text}
-
-            {question.background_info}
 
             {question.resolution_criteria}
 
             {question.fine_print}
+
+            {question.background_info}
             """
         )
         response = await Perplexity(system_prompt=system_prompt).invoke(prompt)
@@ -57,50 +56,42 @@ class TemplateBot(ForecastBot):
     async def _run_forecast_on_binary(
         self, question: BinaryQuestion, research: str
     ) -> ReasonedPrediction[float]:
-        assert isinstance(
-            question, BinaryQuestion
-        ), "Question must be a BinaryQuestion"
         prompt = clean_indents(
             f"""
             You are a professional forecaster interviewing for a job.
+
             Your interview question is:
             {question.question_text}
 
-            Background information:
-            {question.background_info if question.background_info else "No background information provided."}
+            Question background:
+            {question.background_info}
 
-            Resolution criteria:
-            {question.resolution_criteria if question.resolution_criteria else "No resolution criteria provided."}
 
-            Fine print:
-            {question.fine_print if question.fine_print else "No fine print provided."}
+            This question's outcome will be determined by the specific criteria below. These criteria have not yet been satisfied:
+            {question.resolution_criteria}
+
+            {question.fine_print}
 
 
             Your research assistant says:
-            ```
             {research}
-            ```
 
             Today is {datetime.now().strftime("%Y-%m-%d")}.
 
-
             Before answering you write:
             (a) The time left until the outcome to the question is known.
-            (b) What the outcome would be if nothing changed.
-            (c) The most important factors that will influence a successful/unsuccessful resolution.
-            (d) What do you not know that should give you pause and lower confidence? Remember people are statistically overconfident.
-            (e) What you would forecast if you were to only use historical precedent (i.e. how often this happens in the past) without any current information.
-            (f) What you would forecast if there was only a quarter of the time left.
-            (g) What you would forecast if there was 4x the time left.
+            (b) The status quo outcome if nothing changed.
+            (c) A brief description of a scenario that results in a No outcome.
+            (d) A brief description of a scenario that results in a Yes outcome.
 
-            You write your rationale and then the last thing you write is your final answer as: "Probability: ZZ%", 0-100
+            You write your rationale remembering that good forecasters put extra weight on the status quo outcome since the world changes slowly most of the time.
+
+            The last thing you write is your final answer as: "Probability: ZZ%", 0-100
             """
         )
-        gpt_forecast = await self.FINAL_DECISION_LLM.invoke(prompt)
-        prediction = self._extract_forecast_from_binary_rationale(gpt_forecast)
-        reasoning = (
-            gpt_forecast
-            + "\nThe original forecast may have been clamped between 5% and 95%."
+        reasoning = await self.FINAL_DECISION_LLM.invoke(prompt)
+        prediction = self._extract_forecast_from_binary_rationale(
+            reasoning, max_prediction=1, min_prediction=0
         )
         return ReasonedPrediction(
             prediction_value=prediction, reasoning=reasoning
@@ -158,9 +149,23 @@ class TemplateBot(ForecastBot):
     async def _run_forecast_on_numeric(
         self, question: NumericQuestion, research: str
     ) -> ReasonedPrediction[NumericDistribution]:
+        if question.open_upper_bound:
+            upper_bound_message = ""
+        else:
+            upper_bound_message = (
+                f"The outcome can not be higher than {question.upper_bound}."
+            )
+        if question.open_lower_bound:
+            lower_bound_message = ""
+        else:
+            lower_bound_message = (
+                f"The outcome can not be lower than {question.lower_bound}."
+            )
+
         prompt = clean_indents(
             f"""
             You are a professional forecaster interviewing for a job.
+
             Your interview question is:
             {question.question_text}
 
@@ -171,27 +176,34 @@ class TemplateBot(ForecastBot):
 
             {question.fine_print}
 
-            Your research assistant says:
-            ```
-            {research}
-            ```
 
-            The question implies that the majority of the probability distribution is probably in the range:
-            {question.lower_bound} to {question.upper_bound}
+            Your research assistant says:
+            {research}
 
             Today is {datetime.now().strftime("%Y-%m-%d")}.
 
+            {lower_bound_message}
+            {upper_bound_message}
+
             Before answering you write:
             (a) The time left until the outcome to the question is known.
-            (b) What the outcome would be if nothing changed.
-            (c) What you would forecast if there was only a quarter of the time left.
-            (d) What you would forecast if there was 4x the time left.
+            (b) The outcome if nothing changed.
+            (c) The outcome if the current trend continued.
+            (d) The expectations of experts and markets.
+            (e) A brief description of an unexpected scenario that results in a low outcome.
+            (f) A brief description of an unexpected scenario that results in a high outcome.
 
-            You write your rationale and then the last thing you write is your final answer as a series of probability distributions.
-            Each line should be in the format: "Probability of a value below Y is X%". Make sure to use this EXACT format, and change out only Y and X.
-            Provide at values for your 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90% estimates.
-            The lowest value should have a probability approaching 10%, and the highest value should approach 90%.
-            Remember that its very easy to be overconfident. 10% should feel like "this couldn't possibly get below this number!", and probability of 90% should feel like "There is not chance this will get anywhere above this number!"
+            You remind yourself that good forecasters are humble and set wide 90/10 confidence intervals to account for unknown unknowns.
+
+            The last thing you write is your final answer as:
+            "
+            Percentile 10: XX
+            Percentile 20: XX
+            Percentile 40: XX
+            Percentile 60: XX
+            Percentile 80: XX
+            Percentile 90: XX
+            "
             """
         )
         reasoning = await self.FINAL_DECISION_LLM.invoke(prompt)
@@ -202,20 +214,23 @@ class TemplateBot(ForecastBot):
             prediction_value=prediction, reasoning=reasoning
         )
 
-    def _extract_forecast_from_binary_rationale(self, rationale: str) -> float:
-        max_prediction = 95
-        min_prediction = 5
+    def _extract_forecast_from_binary_rationale(
+        self, rationale: str, max_prediction: float, min_prediction: float
+    ) -> float:
+        assert 0 <= max_prediction <= 1
+        assert 0 <= min_prediction <= 1
+        assert max_prediction >= min_prediction
         matches = re.findall(r"(\d+)%", rationale)
         if matches:
             # Return the last number found before a '%'
-            original_number = int(matches[-1])
+            original_number = int(matches[-1]) / 100
             clamped_number = min(
                 max_prediction, max(min_prediction, original_number)
             )
             assert (
                 min_prediction <= clamped_number <= max_prediction
             ), f"Clamped number {clamped_number} is not between {min_prediction} and {max_prediction}"
-            return clamped_number / 100
+            return clamped_number
         else:
             raise ValueError(
                 f"Could not extract prediction from response: {rationale}"
@@ -225,30 +240,33 @@ class TemplateBot(ForecastBot):
         self, reasoning: str, options: list[str]
     ) -> PredictedOptionSet:
         option_probabilities = []
+
         # Iterate through each line in the text
         for expected_option in options:
             probability_found = False
+            matching_lines = []
             for line in reasoning.split("\n"):
                 if expected_option in line:
-                    # Extract all numbers from the line
-                    numbers = re.findall(r"-?\d+(?:,\d{3})*(?:\.\d+)?", line)
-                    numbers_no_commas = [
-                        num.replace(",", "") for num in numbers
-                    ]
-                    # Convert strings to float or int
-                    numbers = [
-                        float(num) if "." in num else int(num)
-                        for num in numbers_no_commas
-                    ]
-                    if len(numbers) >= 1:
-                        last_number = numbers[-1]
-                        option_probabilities.append(last_number)
-                        probability_found = True
-                        break
+                    matching_lines.append(line)
 
-            assert (
-                probability_found
-            ), f"No probability found for option: {expected_option}"
+            if matching_lines:
+                last_line = matching_lines[-1]
+                # Extract all numbers from the line
+                numbers_as_string = re.findall(
+                    r"-?\d+(?:,\d{3})*(?:\.\d+)?", last_line
+                )
+                numbers_as_float = [
+                    float(num.replace(",", "")) for num in numbers_as_string
+                ]
+                if len(numbers_as_float) >= 1:
+                    last_number = numbers_as_float[-1]
+                    option_probabilities.append(last_number)
+                    probability_found = True
+
+            if not probability_found:
+                raise ValueError(
+                    f"No probability found for option: {expected_option}"
+                )
 
         assert len(option_probabilities) == len(
             options
@@ -285,28 +303,41 @@ class TemplateBot(ForecastBot):
     def _extract_forecast_from_numeric_rationale(
         self, reasoning: str, question: NumericQuestion
     ) -> NumericDistribution:
-        matches = re.findall(
-            r"Probability of a value below (\d+(?:\.\d+)?) is (\d+(?:\.\d+)?)%",
-            reasoning,
-        )
-        if matches:
-            percentiles = []
-            for value, percentile in matches:
-                percentiles.append(
-                    Percentile(
-                        value=float(value.replace(",", "")),
-                        percentile=float(percentile) / 100,
-                    )
-                )
-            return NumericDistribution(
-                declared_percentiles=percentiles,
-                open_upper_bound=question.open_upper_bound,
-                open_lower_bound=question.open_lower_bound,
-                upper_bound=question.upper_bound,
-                lower_bound=question.lower_bound,
-                zero_point=question.zero_point,
+        pattern = r"^.*(?:P|p)ercentile.*$"
+        number_pattern = r"-?\d+(?:,\d{3})*(?:\.\d+)?"
+        results = []
+
+        for line in reasoning.split("\n"):
+            if re.match(pattern, line):
+                numbers = re.findall(number_pattern, line)
+                numbers_no_commas = [num.replace(",", "") for num in numbers]
+                numbers = [
+                    float(num) if "." in num else int(num)
+                    for num in numbers_no_commas
+                ]
+                if len(numbers) > 1:
+                    first_number = numbers[0]
+                    last_number = numbers[-1]
+                    results.append((first_number, last_number))
+
+        percentiles = [
+            Percentile(
+                value=value,
+                percentile=percentile / 100,
             )
-        else:
+            for percentile, value in results
+        ]
+
+        if not percentiles:
             raise ValueError(
                 f"Could not extract prediction from response: {reasoning}"
             )
+
+        return NumericDistribution(
+            declared_percentiles=percentiles,
+            open_upper_bound=question.open_upper_bound,
+            open_lower_bound=question.open_lower_bound,
+            upper_bound=question.upper_bound,
+            lower_bound=question.lower_bound,
+            zero_point=question.zero_point,
+        )

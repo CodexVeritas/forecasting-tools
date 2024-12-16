@@ -23,7 +23,7 @@ from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
 
 class TypeMapping(BaseModel):
     question_type: type[MetaculusQuestion]
-    test_question_id: int
+    test_post_id: int
     report_type: type[ForecastReport] | None
 
 
@@ -31,12 +31,12 @@ class ReportOrganizer:
     __TYPE_MAPPING = [
         TypeMapping(
             question_type=BinaryQuestion,
-            test_question_id=578,  # https://www.metaculus.com/questions/578/human-extinction-by-2100/
+            test_post_id=578,  # https://www.metaculus.com/questions/578/human-extinction-by-2100/
             report_type=BinaryReport,
         ),
         TypeMapping(
             question_type=NumericQuestion,
-            test_question_id=14333,  # https://www.metaculus.com/questions/14333/age-of-oldest-human-as-of-2100/
+            test_post_id=14333,  # https://www.metaculus.com/questions/14333/age-of-oldest-human-as-of-2100/
             report_type=NumericReport,
         ),
         # TypeMapping(
@@ -46,7 +46,7 @@ class ReportOrganizer:
         # ),
         TypeMapping(
             question_type=MultipleChoiceQuestion,
-            test_question_id=22427,  # https://www.metaculus.com/questions/22427/number-of-new-leading-ai-labs/
+            test_post_id=22427,  # https://www.metaculus.com/questions/22427/number-of-new-leading-ai-labs/
             report_type=MultipleChoiceReport,
         ),
     ]
@@ -58,7 +58,7 @@ class ReportOrganizer:
         assert issubclass(question_type, MetaculusQuestion)
         for mapping in cls.__TYPE_MAPPING:
             if mapping.question_type == question_type:
-                return mapping.test_question_id
+                return mapping.test_post_id
         raise ValueError(f"No question ID found for type {question_type}")
 
     @classmethod

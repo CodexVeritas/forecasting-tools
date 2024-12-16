@@ -55,7 +55,7 @@ class MetaculusApi:
             },
             **cls.__get_auth_headers(),  # type: ignore
         )
-        logger.info(f"Posted comment on question {post_id}")
+        logger.info(f"Posted comment on post {post_id}")
         raise_for_status_with_additional_info(response)
 
     @classmethod

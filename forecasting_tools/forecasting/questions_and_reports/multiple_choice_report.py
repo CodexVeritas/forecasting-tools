@@ -86,4 +86,4 @@ class MultipleChoiceReport(ForecastReport):
             for option in prediction.predicted_options
         ]
         combined_bullet_points = "\n".join(option_bullet_points)
-        return combined_bullet_points
+        return f"\n{combined_bullet_points}\n"
