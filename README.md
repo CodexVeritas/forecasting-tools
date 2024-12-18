@@ -14,9 +14,9 @@ Demo website: https://mokoresearch.streamlit.app/
 
 This repository contains forecasting and research tools built with Python and Streamlit. The project aims to assist users in making predictions, conducting research, and analyzing data related to hard to answer questions (especially those from Metaculus).
 
-Key features: Tools most likely to be useful to you
+Here are the tools most likely to be useful to you:
 - 🎯 **Forecasting Bot:** General Forecaster that integrates with the Metaculus AI benchmarking competition. You can forecast with a pre-existing bot or override the class to customize your own (without redoing all the API code, etc)
-- 🔍 **Perplexity++ Smart Searcher:** Smart Searcher for AI-powered internet powered by Exa.ai that is configurable, more accurate, able to decide on filters, able to link to exact paragraphs, and generally better than Perplexity.ai.
+- 🔍 **Perplexity++ Smart Searcher:** An AI-powered internet-informed llm powered by Exa.ai. Its a better (but more expensive) alternative to Perplexity.ai that is configurable, more accurate, able to decide on filters, able to link to exact paragraphs, etc.
 - 🔑 **Key Factor Analysis:** Key Factors Analysis for scoring, ranking, and prioritizing important variables in forecasting questions
 
 
@@ -29,16 +29,174 @@ Here are some other cool components and features of the project:
 
 Join the [discord](https://discord.gg/Dtq4JNdXnw) for updates and to give feedback (btw feedback is very appreciated, even just a quick 'I did/didn't decide to use the tool for reason X' is helpful to know)
 
-Note: This package is still in a experimental phase, though I'm shooting to keep the API fairly stable. I'll especially try to keep the ForecastBot and TemplateBot APIs consistent.
+Note: This package is still in a experimental phase. The goal is to keep the API fairly stable, though no guarantees are given at this phase. There will be special effort to keep the ForecastBot and TemplateBot APIs consistent.
 
 # Forecasting Bot Building
 
-## Using Preexisting bot
+## Using the Preexisting Bots
 
-## Building your own bot
-- forking
-- env variables
-- enabling actions
+The package comes with two major pre-built bots:
+- **MainBot**: The more sophisticated bot that uses multiple research strategies and carefully structured prompts
+- **TemplateBot**: A simpler bot that models the Metaculus templates that's cheaper, easier to start with, and faster to run.
+
+They both have roughly the same parameters. See below on how to use the TemplateBot to make forecasts.
+
+### Forecasting on a Tournament
+
+```python
+from forecasting_tools import TemplateBot, MetaculusApi
+
+# Initialize the bot
+bot = TemplateBot(
+    research_reports_per_question=3,  # Number of separate research attempts per question
+    predictions_per_research_report=5,  # Number of predictions to make per research report
+    publish_reports_to_metaculus=True,  # Whether to post the forecasts to Metaculus
+    folder_to_save_reports_to="logs/forecasts/",  # Where to save detailed reports
+    skip_previously_forecasted_questions=True
+)
+
+# Run forecasts on Q4 2024 AI Tournament
+TOURNAMENT_ID = MetaculusApi.AI_COMPETITION_ID_Q4
+reports = await bot.forecast_on_tournament(TOURNAMENT_ID)
+
+# Print results
+for report in reports:
+    print(f"\nQuestion: {report.question.question_text}")
+    print(f"Prediction: {report.prediction}")
+```
+
+### Forecasting a Single Question
+
+```python
+from forecasting_tools import TemplateBot, BinaryQuestion, QuestionState
+
+# Initialize the bot
+bot = TemplateBot(
+    research_reports_per_question=3,
+    predictions_per_research_report=5,
+    publish_reports_to_metaculus=False,
+)
+
+# Get and forecast a specific question
+question1 = MetaculusApi.get_question_by_url(
+    "https://www.metaculus.com/questions/578/human-extinction-by-2100/"
+)
+question2 = BinaryQuestion(
+    question_text="Will YouTube be blocked in Russia?",
+    background_info="...", # Or 'None'
+    resolution_criteria="...", # Or 'None'
+    fine_print="...", # Or 'None'
+    id_of_question=0, # The ID and state only matters if using Metaculus API calls
+    question_state=QuestionState.OPEN
+)
+
+reports = await bot.forecast_questions([question1, question2])
+
+# Print results
+for report in reports:
+    print(f"Question: {report.question.question_text}")
+    print(f"Prediction: {report.prediction}")
+    print("\nReasoning:")
+    print(report.explanation)
+```
+
+The bot will:
+1. Research the question
+2. Generate multiple independent predictions
+3. Combine these predictions into a final forecast
+4. Save detailed research and reasoning to the specified folder
+5. Optionally post the forecast to Metaculus (if `publish_reports_to_metaculus=True`)
+
+Note: You'll need to have your environment variables set up (see the section below)
+
+
+## Running your own bot
+
+### Join the tournament quick-start
+The quickest way to join the Metaculus Benchmarking Tournament (or any other tournament) is to fork this repo, enable Github workflow/actions, and then set repository secrets. Ideally this takes less than 15min, and then you have a bot in the tournament! Later you can develop locally and then merge in changes to your fork.
+
+There is a prewritten workflow that will run the bot every 15min, pick up new questions, and forecast on them. Automation is handled in the `.github/workflows/` folder. The `hourly-run.yaml` file runs the bot every 15 min and will skip questions it has already forecasted on.
+
+1) **Fork the repository**: Click 'fork' in the right hand corner of the repo.
+2) **Set secrets**: Go to `Settings -> Secrets and variables -> Actions -> New repository secret` and set API keys/Tokens as secrets. You will want to set your METACULUS_TOKEN. This will be used to post questions to Metaculus, and access the Metaculus OpenAI proxy (you should automatically be given some credits if you have a bot account). For additional environment variables you might want, see the section below.
+3) **Enable Actions**: Go to 'Actions' then click 'Enable'. Then go to the 'Hourly Run' workflow, and click 'Enable'. To test if the workflow is working, click 'Run workflow', choose the main branch, then click the green 'Run workflow' button. This will check for new questions and forecast only on ones it has not yet successfully forecast on.
+
+The bot should just work as is at this point. You can disable the workflow by clicking `Actions > Hourly Run > Triple dots > disable workflow`
+
+### Local Development
+See the 'Local Development' section later in this README.
+
+### Customizing the Bot
+Generally all you have to do to make your own bot is inherit from the TemplateBot and override any combination of the 3 forecasting methods and the 1 research method. This saves you the headache of parsing the outputs, interacting with the Metaculus API, etc. Here is an example. It may also be helpful to look at the TemplateBot code (forecasting_tools/forecasting/forecast_bots/template_bot.py) for a more complete example.
+
+```python
+from forecasting_tools import (
+    TemplateBot,
+    MetaculusQuestion,
+    BinaryQuestion,
+    MultipleChoiceQuestion,
+    NumericQuestion,
+    ReasonedPrediction,
+    PredictedOptionList,
+    NumericDistribution,
+    SmartSearcher,
+    Gpt4oMetaculusProxy
+)
+from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
+
+class MyCustomBot(TemplateBot):
+    async def run_research(self, question: MetaculusQuestion) -> str:
+        """Custom research method that focuses on recent events and expert opinions"""
+        searcher = SmartSearcher(
+            num_searches_to_run=3,
+            num_sites_per_search=5
+        )
+
+        prompt = clean_indents(
+            f"""
+            Analyze this forecasting question:
+            1. Filter for recent events in the past 6 months
+            2. Don't include domains from youtube.com
+            3. Look for current trends and data
+            4. Find historical analogies and base rates
+
+            Question: {question.question_text}
+
+            Background Info: {question.background_info}
+            Resolution Criteria: {question.resolution_criteria}
+            """
+        )
+
+        report = await searcher.invoke(prompt)
+        return report
+
+    async def _run_forecast_on_binary(
+        self, question: BinaryQuestion, research: str
+    ) -> ReasonedPrediction[float]:
+        prompt = f"Please make a prediction on the following question: {question.question_text}. The last thing you write is your final answer as: 'Probability: ZZ%', 0-100"
+        reasoning = await Gpt4oMetaculusProxy.invoke(prompt)
+        prediction = self._extract_forecast_from_binary_rationale(
+            reasoning, max_prediction=1, min_prediction=0
+        )
+        return ReasonedPrediction(
+            prediction_value=prediction, reasoning=reasoning
+        )
+
+    async def _run_forecast_on_multiple_choice(
+        self, question: MultipleChoiceQuestion, research: str
+    ) -> ReasonedPrediction[PredictedOptionList]:
+        ...
+
+    async def _run_forecast_on_numeric(
+        self, question: NumericQuestion, research: str
+    ) -> ReasonedPrediction[NumericDistribution]:
+        ...
+```
+
+
+## Setting Environment Variables
+Whether running locally or through Github actions, you will need to set environment variables. All environment variables you might want are in `.env.template`. Generally you only need the METACULUS_TOKEN if running the Template. Having an EXA_API_KEY (see www.exa.ai) or PERPLEXITY_API_KEY (see www.perplexity.ai) is needed for searching the web. Make sure to put these variables in your `.env` file if running locally and in the Github actions secrets if running on Github actions.
+
 
 # Forecasting Tools Examples
 
@@ -110,7 +268,7 @@ The schema instructions will format the Pydantic model into clear instructions f
 
 
 ## Key Factors Researcher
-The Key Factors Researcher helps identify and analyze key factors that should be considered for a forecasting question. As of last update, this is the most reliable of the tools, and gives something useful and accurate most every time. It asks a lot of questions, turns search results into a long list of bullet points, rates each bullet point on ~8 criteria, and returns the top results.
+The Key Factors Researcher helps identify and analyze key factors that should be considered for a forecasting question. As of last update, this is the most reliable of the tools, and gives something useful and accurate almost every time. It asks a lot of questions, turns search results into a long list of bullet points, rates each bullet point on ~8 criteria, and returns the top results.
 
 ```python
 from forecasting_tools import KeyFactorsResearcher, BinaryQuestion, QuestionState
@@ -121,7 +279,7 @@ question = BinaryQuestion(
     background_info="...", # Or 'None'
     resolution_criteria="...", # Or 'None'
     fine_print="...", # Or 'None'
-    question_id=0, # The ID and state only matters if using Metaculus API calls
+    id_of_question=0, # The ID and state only matters if using Metaculus API calls
     question_state=QuestionState.OPEN
 )
 
@@ -301,7 +459,7 @@ with MonetaryCostManager(max_cost) as cost_manager:
 The environment variables you need can be found in ```.env.template```. Copy this template as ```.env``` and fill it in. As of last update, you only strictly need OPENAI_API_KEY and EXA_API_KEY.
 
 ## Docker Dev Container
-Dev containers are reliable ways to make sure environments work on everyone's machine the first try and so you don't have to spend hours setting up your environment (especially if you have docker already installed). If you would rather just use poetry, without the dev container, you can skip to "Alternatives to Docker". Otherwise, to get your development environment up and running, you need to have Docker Engine installed and running. Once you do, you can use the VSCode dev container pop-up to automatically set up everything for you.
+Dev containers are reliable ways to make sure environments work on everyone's machine the first try and so you don't have to spend hours setting up your environment (especially if you have Docker already installed). If you would rather just use poetry, without the dev container, you can skip to "Alternatives to Docker". Otherwise, to get your development environment up and running, you need to have Docker Engine installed and running. Once you do, you can use the VSCode dev container pop-up to automatically set up everything for you.
 
 ### Install Docker
 For Windows and Mac, you will download Docker Desktop. For Linux, you will download Docker Engine. (NOTE: These instructions might be outdated).
@@ -315,7 +473,7 @@ First download and setup Docker Engine using the instructions at the link below 
 
 
 ### Starting the container
-Once Docker is installed, when you open up the project folder in VSCode, you will see a pop up noting that you have a setup for a dev container, and asking if you would like to open the folder in a container. You will want to click "open in container". This will automatically set up everything you need and bring you into the container. If the docker process times out in the middle of installing python packages you can run the `.devcontiner/postinstall.sh` manually. You may need to have the VSCode Docker extension and/or devcontainer extension downloaded in order for the pop up to appear.
+Once Docker is installed, when you open up the project folder in VSCode, you will see a pop up noting that you have a setup for a dev container, and asking if you would like to open the folder in a container. You will want to click "open in container". This will automatically set up everything you need and bring you into the container. If the Docker process times out in the middle of installing python packages you can run the `.devcontiner/postinstall.sh` manually. You may need to have the VSCode Docker extension and/or devcontainer extension downloaded in order for the pop up to appear.
 
 Once you are in the container, poetry should have already installed a virtual environment. For VSCode features to use this environment, you will need to select the correct python interpreter. You can do this by pressing `Ctrl + Shift + P` and then typing `Python: Select Interpreter`. Then select the interpreter that starts with `.venv`.
 
@@ -323,11 +481,11 @@ A number of vscode extensions are installed automatically (e.g. linting). You ma
 
 
 ### Managing Docker
-There are many ways to manager Docker containers, but generally if you download the vscode docker extension, you will be able to stop/start/remove all containers and images.
+There are many ways to manager Docker containers, but generally if you download the vscode Docker extension, you will be able to stop/start/remove all containers and images.
 
 
 ### Alternatives to Docker
-If you choose not to run docker, you can use poetry to set up a local virtual environment. If you are on Ubuntu, you should be able to just read through and then run `.devcontainer/postinstall.sh`. If you aren't on Ubuntu, check out the links in the postinstall file for where install instructions for dependencies were originally found. You may also want to take a look at VSCode extensions that would be installed (see the list in the `.devcontainer/devcontainer.json` file) so that some VSCode workplace settings work out of the box (e.g. automatic Black Formatting).
+If you choose not to run Docker, you can use poetry to set up a local virtual environment. If you are on Ubuntu, you should be able to just read through and then run `.devcontainer/postinstall.sh`. If you aren't on Ubuntu, check out the links in the postinstall file for where install instructions for dependencies were originally found. You may also want to take a look at VSCode extensions that would be installed (see the list in the `.devcontainer/devcontainer.json` file) so that some VSCode workplace settings work out of the box (e.g. automatic Black Formatting).
 
 ## Running the Front End
 You can run any front end folder in the front_end directory by executing `streamlit run front_end/Home.py`. This will start a development server for you that you can run.

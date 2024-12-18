@@ -68,7 +68,7 @@ class TemplateBot(ForecastBot):
             response = await SmartSearcher().invoke(prompt)
         else:
             logger.error(
-                "No API keys for csearh. Skipping research and setting it blank."
+                "No API keys for searching the web. Skipping research and setting it blank."
             )
             response = ""
         return response
