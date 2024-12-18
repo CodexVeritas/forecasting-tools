@@ -57,13 +57,13 @@ from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion as BinaryQuestion,
 )
 from forecasting_tools.forecasting.questions_and_reports.questions import (
+    MetaculusQuestion as MetaculusQuestion,
+)
+from forecasting_tools.forecasting.questions_and_reports.questions import (
     MultipleChoiceQuestion as MultipleChoiceQuestion,
 )
 from forecasting_tools.forecasting.questions_and_reports.questions import (
     NumericQuestion as NumericQuestion,
-)
-from forecasting_tools.forecasting.questions_and_reports.questions import (
-    Question as Question,
 )
 from forecasting_tools.forecasting.questions_and_reports.questions import (
     QuestionState as QuestionState,

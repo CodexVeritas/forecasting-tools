@@ -15,14 +15,15 @@ from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
 )
 from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
+    MetaculusQuestion,
     MultipleChoiceQuestion,
     NumericQuestion,
-    Question,
 )
+from forecasting_tools.util import file_manipulation
 
 
 class TypeMapping(BaseModel):
-    question_type: type[Question]
+    question_type: type[MetaculusQuestion]
     test_post_id: int
     report_type: type[ForecastReport] | None
 
@@ -53,9 +54,9 @@ class ReportOrganizer:
 
     @classmethod
     def get_example_question_id_for_question_type(
-        cls, question_type: type[Question]
+        cls, question_type: type[MetaculusQuestion]
     ) -> int:
-        assert issubclass(question_type, Question)
+        assert issubclass(question_type, MetaculusQuestion)
         for mapping in cls.__TYPE_MAPPING:
             if mapping.question_type == question_type:
                 return mapping.test_post_id
@@ -63,9 +64,9 @@ class ReportOrganizer:
 
     @classmethod
     def get_report_type_for_question_type(
-        cls, question_type: type[Question]
+        cls, question_type: type[MetaculusQuestion]
     ) -> type[ForecastReport]:
-        assert issubclass(question_type, Question)
+        assert issubclass(question_type, MetaculusQuestion)
         for mapping in cls.__TYPE_MAPPING:
             if mapping.question_type == question_type:
                 if mapping.report_type is None:
@@ -77,9 +78,9 @@ class ReportOrganizer:
 
     @classmethod
     def get_live_example_question_of_type(
-        cls, question_type: type[Question]
-    ) -> Question:
-        assert issubclass(question_type, Question)
+        cls, question_type: type[MetaculusQuestion]
+    ) -> MetaculusQuestion:
+        assert issubclass(question_type, MetaculusQuestion)
         question_id = cls.get_example_question_id_for_question_type(
             question_type
         )
@@ -96,5 +97,33 @@ class ReportOrganizer:
         ]
 
     @classmethod
-    def get_all_question_types(cls) -> list[type[Question]]:
+    def get_all_question_types(cls) -> list[type[MetaculusQuestion]]:
         return [mapping.question_type for mapping in cls.__TYPE_MAPPING]
+
+    @classmethod
+    def load_reports_from_file_path(
+        cls, file_path: str
+    ) -> list[ForecastReport]:
+        jsons = file_manipulation.load_json_file(file_path)
+        reports = []
+        for json in jsons:
+            for report_type in cls.get_all_report_types():
+                try:
+                    report = report_type.from_json(json)
+                    reports.append(report)
+                except Exception:
+                    pass
+        if len(reports) != len(jsons):
+            raise ValueError(
+                f"Some reports were not loaded correctly. {len(reports)} reports loaded, {len(jsons)} jsons provided."
+            )
+        return reports
+
+    @classmethod
+    def save_reports_to_file_path(
+        cls, reports: list[ForecastReport], file_path: str
+    ) -> None:
+        jsons = []
+        for report in reports:
+            jsons.append(report.to_json())
+        file_manipulation.write_json_file(file_path, jsons)

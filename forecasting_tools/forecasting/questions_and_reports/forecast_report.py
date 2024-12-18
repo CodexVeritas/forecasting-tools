@@ -7,7 +7,7 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel, field_validator
 
 from forecasting_tools.forecasting.questions_and_reports.questions import (
-    Question,
+    MetaculusQuestion,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_section import (
     ReportSection,
@@ -30,7 +30,7 @@ class ResearchWithPredictions(BaseModel, Generic[T]):
 
 
 class ForecastReport(BaseModel, Jsonable, ABC):
-    question: Question
+    question: MetaculusQuestion
     explanation: str
     other_notes: str | None = None
     price_estimate: float | None = None
@@ -71,7 +71,7 @@ class ForecastReport(BaseModel, Jsonable, ABC):
     @classmethod
     @abstractmethod
     async def aggregate_predictions(
-        cls, predictions: list[T], question: Question
+        cls, predictions: list[T], question: MetaculusQuestion
     ) -> T:
         raise NotImplementedError(
             "Subclass must implement this abstract method"

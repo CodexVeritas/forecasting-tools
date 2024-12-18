@@ -11,7 +11,9 @@ from forecasting_tools.forecasting.helpers.configured_llms import (
     AdvancedLlm,
     BasicLlm,
 )
-from forecasting_tools.forecasting.helpers.metaculus_api import Question
+from forecasting_tools.forecasting.helpers.metaculus_api import (
+    MetaculusQuestion,
+)
 from forecasting_tools.forecasting.helpers.smart_searcher import SmartSearcher
 from forecasting_tools.forecasting.sub_question_researchers.deduplicator import (
     Deduplicator,
@@ -33,7 +35,7 @@ class KeyFactorsResearcher:
     @classmethod
     async def find_and_sort_key_factors(
         cls,
-        metaculus_question: Question,
+        metaculus_question: MetaculusQuestion,
         num_key_factors_to_return: int = 5,
         num_questions_to_research_with: int = 26,
     ) -> list[ScoredKeyFactor]:
@@ -70,7 +72,7 @@ class KeyFactorsResearcher:
     async def __find_background_key_factors(
         cls,
         num_background_questions: int,
-        metaculus_question: Question,
+        metaculus_question: MetaculusQuestion,
     ) -> list[KeyFactor]:
         research_manager = ResearchCoordinator(metaculus_question)
         background_questions = (
@@ -87,7 +89,7 @@ class KeyFactorsResearcher:
     async def __find_base_rate_key_factors(
         cls,
         num_base_rate_questions: int,
-        metaculus_question: Question,
+        metaculus_question: MetaculusQuestion,
     ) -> list[KeyFactor]:
         research_manager = ResearchCoordinator(metaculus_question)
         base_rate_questions = (
@@ -171,7 +173,7 @@ class KeyFactorsResearcher:
     async def __deduplicate_key_factors(
         cls,
         key_factors: list[ScoredKeyFactor],
-        metaculus_question: Question,
+        metaculus_question: MetaculusQuestion,
     ) -> list[ScoredKeyFactor]:
         strings_to_check = [factor.text for factor in key_factors]
         prompt_context = (
@@ -196,7 +198,7 @@ class KeyFactorsResearcher:
     @classmethod
     async def __score_key_factor_list(
         cls,
-        metaculus_question: Question,
+        metaculus_question: MetaculusQuestion,
         key_factors: list[KeyFactor],
     ) -> list[ScoredKeyFactor]:
         scoring_coroutines = [
@@ -262,7 +264,7 @@ class KeyFactorsResearcher:
     @classmethod
     async def __prioritize_key_factors(
         cls,
-        metaculus_question: Question,
+        metaculus_question: MetaculusQuestion,
         key_factors_to_compare: list[ScoredKeyFactor],
         num_factors_to_return: int,
     ) -> list[ScoredKeyFactor]:

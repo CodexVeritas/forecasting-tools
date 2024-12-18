@@ -24,9 +24,9 @@ from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
 )
 from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
+    MetaculusQuestion,
     MultipleChoiceQuestion,
     NumericQuestion,
-    Question,
 )
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class TemplateBot(ForecastBot):
         else Gpt4o(temperature=0.7)
     )
 
-    async def run_research(self, question: Question) -> str:
+    async def run_research(self, question: MetaculusQuestion) -> str:
         system_prompt = clean_indents(
             """
             You are an assistant to a superforecaster.

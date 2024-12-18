@@ -8,7 +8,7 @@ from forecasting_tools.ai_models.ai_utils.ai_misc import (
 )
 from forecasting_tools.forecasting.helpers.configured_llms import BasicLlm
 from forecasting_tools.forecasting.questions_and_reports.questions import (
-    Question,
+    MetaculusQuestion,
 )
 from forecasting_tools.forecasting.sub_question_researchers.base_rate_researcher import (
     BaseRateReport,
@@ -32,7 +32,7 @@ class ResearchCoordinator:
 
     def __init__(
         self,
-        question: Question,
+        question: MetaculusQuestion,
     ) -> None:
         self.question = question
 

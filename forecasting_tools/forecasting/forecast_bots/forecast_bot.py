@@ -23,9 +23,9 @@ from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
 from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
     DateQuestion,
+    MetaculusQuestion,
     MultipleChoiceQuestion,
     NumericQuestion,
-    Question,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_organizer import (
     ReportOrganizer,
@@ -75,7 +75,7 @@ class ForecastBot(ABC):
 
     async def forecast_question(
         self,
-        question: Question,
+        question: MetaculusQuestion,
     ) -> ForecastReport:
         assert (
             not self.skip_previously_forecasted_questions
@@ -89,7 +89,7 @@ class ForecastBot(ABC):
 
     async def forecast_questions(
         self,
-        questions: list[Question],
+        questions: list[MetaculusQuestion],
     ) -> list[ForecastReport]:
         if self.skip_previously_forecasted_questions:
             unforecasted_questions = [
@@ -120,19 +120,19 @@ class ForecastBot(ABC):
         return reports
 
     @abstractmethod
-    async def run_research(self, question: Question) -> str:
+    async def run_research(self, question: MetaculusQuestion) -> str:
         """
         Researches a question and returns markdown report
         """
         raise NotImplementedError("Subclass must implement this method")
 
     async def summarize_research(
-        self, question: Question, research: str
+        self, question: MetaculusQuestion, research: str
     ) -> str:
         return f"{research[:2500]}..."
 
     async def _run_individual_question(
-        self, question: Question
+        self, question: MetaculusQuestion
     ) -> ForecastReport:
         with MonetaryCostManager() as cost_manager:
             start_time = time.time()
@@ -179,7 +179,7 @@ class ForecastBot(ABC):
         )
 
     async def _research_and_make_predictions(
-        self, question: Question
+        self, question: MetaculusQuestion
     ) -> ResearchWithPredictions:
         research = await self.run_research(question)
         summary_report = await self.summarize_research(question, research)
@@ -245,7 +245,7 @@ class ForecastBot(ABC):
 
     def _create_unified_explanation(
         self,
-        question: Question,
+        question: MetaculusQuestion,
         research_prediction_collections: list[ResearchWithPredictions],
         aggregated_prediction: Any,
         final_cost: float,
@@ -353,7 +353,9 @@ class ForecastBot(ABC):
             rationales.append(new_rationale)
         return "\n".join(rationales)
 
-    def __create_file_path_to_save_to(self, questions: list[Question]) -> str:
+    def __create_file_path_to_save_to(
+        self, questions: list[MetaculusQuestion]
+    ) -> str:
         assert (
             self.folder_to_save_reports_to is not None
         ), "Folder to save reports to is not set"

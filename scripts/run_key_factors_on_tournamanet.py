@@ -4,7 +4,7 @@ from datetime import datetime
 
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.forecasting.questions_and_reports.questions import (
-    Question,
+    MetaculusQuestion,
     QuestionState,
 )
 from forecasting_tools.forecasting.sub_question_researchers.general_researcher import (
@@ -84,14 +84,14 @@ async def run_key_factors_on_tournament(
     logger.info(f"Question backgrounds written to {output_path}")
 
 
-async def _process_question(question: str | Question) -> dict:
+async def _process_question(question: str | MetaculusQuestion) -> dict:
     if isinstance(question, str):
         general_search_responder = GeneralResearcher(question)
         background_info = (
             await general_search_responder.respond_with_markdown()
         )
 
-        question = Question(
+        question = MetaculusQuestion(
             question_text=question,
             background_info=background_info,
             id_of_post=0,
@@ -126,7 +126,7 @@ def _extract_all_markdown_info_from_key_results_file(
     formatted_text = ""
 
     for result in results:
-        question = Question.from_json(result.get("question", {}))
+        question = MetaculusQuestion.from_json(result.get("question", {}))
         background = result.get("key_factors_markdown", "")
 
         if question and background:

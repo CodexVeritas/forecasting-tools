@@ -15,10 +15,10 @@ from forecasting_tools.forecasting.questions_and_reports.binary_report import (
 )
 from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
-    Question,
+    MetaculusQuestion,
 )
 
-T = TypeVar("T", bound=Question)
+T = TypeVar("T", bound=MetaculusQuestion)
 
 
 class ForecastingTestManager:

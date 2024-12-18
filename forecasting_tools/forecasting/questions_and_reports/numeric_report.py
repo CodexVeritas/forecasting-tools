@@ -73,7 +73,7 @@ class NumericDistribution(BaseModel):
         percentile_min = min(float(key) for key in percentile_values.keys())
         range_min = lower_bound
         range_max = upper_bound
-        range_size = range_max - range_min
+        range_size = abs(range_max - range_min)
         buffer = 1 if range_size > 100 else 0.01 * range_size
 
         # Adjust any values that are exactly at the bounds

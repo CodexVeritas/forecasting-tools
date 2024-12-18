@@ -5,9 +5,17 @@ import pytest
 from code_tests.unit_tests.test_forecasting.forecasting_test_manager import (
     ForecastingTestManager,
 )
-from code_tests.utilities_for_tests import jsonable_assertations
-from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
-    ForecastReport,
+from forecasting_tools.forecasting.questions_and_reports.binary_report import (
+    BinaryReport,
+)
+from forecasting_tools.forecasting.questions_and_reports.multiple_choice_report import (
+    MultipleChoiceReport,
+)
+from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
+    NumericReport,
+)
+from forecasting_tools.forecasting.questions_and_reports.report_organizer import (
+    ReportOrganizer,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_section import (
     ReportSection,
@@ -17,8 +25,17 @@ from forecasting_tools.forecasting.questions_and_reports.report_section import (
 def test_metaculus_report_is_jsonable() -> None:
     temp_writing_path = "temp/temp_metaculus_report.json"
     read_report_path = "code_tests/unit_tests/test_forecasting/forecasting_test_data/metaculus_forecast_report_examples.json"
-    jsonable_assertations.assert_reading_and_printing_from_file_works(
-        ForecastReport, read_report_path, temp_writing_path
+    reports = ReportOrganizer.load_reports_from_file_path(read_report_path)
+    assert any(isinstance(report, NumericReport) for report in reports)
+    assert any(isinstance(report, BinaryReport) for report in reports)
+    assert any(isinstance(report, MultipleChoiceReport) for report in reports)
+
+    ReportOrganizer.save_reports_to_file_path(reports, temp_writing_path)
+    reports_2 = ReportOrganizer.load_reports_from_file_path(temp_writing_path)
+    assert len(reports) == len(reports_2)
+    assert all(
+        report.to_json() == report_2.to_json()
+        for report, report_2 in zip(reports, reports_2)
     )
 
 

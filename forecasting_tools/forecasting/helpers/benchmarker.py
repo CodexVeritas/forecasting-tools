@@ -12,7 +12,7 @@ from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
 from forecasting_tools.forecasting.questions_and_reports.questions import (
-    Question,
+    MetaculusQuestion,
 )
 
 
@@ -65,7 +65,7 @@ class Benchmarker:
             # Choose a random seed so all benchmarks in a similar time period use the same questions
         )
         assert len(questions) == num_questions_to_benchmark_on
-        questions = typeguard.check_type(questions, list[Question])
+        questions = typeguard.check_type(questions, list[MetaculusQuestion])
         reports = await forecast_bot.forecast_questions(questions)
         reports = typeguard.check_type(reports, list[BinaryReport])
         average_deviation_score = (

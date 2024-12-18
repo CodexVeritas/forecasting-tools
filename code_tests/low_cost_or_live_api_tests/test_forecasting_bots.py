@@ -21,7 +21,7 @@ from forecasting_tools.forecasting.forecast_bots.template_bot import (
 )
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.forecasting.questions_and_reports.questions import (
-    Question,
+    MetaculusQuestion,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_organizer import (
     ReportOrganizer,
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
     "question_type, bot", get_cheap_bot_question_type_pairs()
 )
 async def test_predicts_test_question(
-    question_type: type[Question],
+    question_type: type[MetaculusQuestion],
     bot: ForecastBot,
 ) -> None:
 
@@ -85,7 +85,7 @@ async def test_no_reports_when_questions_already_forecasted(
     questions = [
         ForecastingTestManager.get_question_safe_to_pull_and_push_to()
     ]
-    questions = typeguard.check_type(questions, list[Question])
+    questions = typeguard.check_type(questions, list[MetaculusQuestion])
 
     for question in questions:
         question.already_forecasted = True
