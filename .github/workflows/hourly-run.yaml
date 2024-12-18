@@ -5,7 +5,7 @@ on:
   schedule:
     - cron: "*/15 * * * *" # runs every 15 minutes. Make sure to skip already forecasted questions!
 
-# Daily job to run the simple forecast bot
+# Daily job to run the forecast bot
 jobs:
   daily_build:
     runs-on: ubuntu-latest # determines the machine that will run the job - keep as is
@@ -35,8 +35,9 @@ jobs:
           poetry run python scripts/run_forecasts_for_ai_tournament.py
         # this reads the environment variables from the github repository.
         # Store under Settings --> Secrets and variables --> Actions
+        # Not all these variables are required. See the ReadMe for more details.
         env:
-          METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }} # replace this with the name of the variable under which you stored your own Metaculus token
+          METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           EXA_API_KEY: ${{ secrets.EXA_API_KEY }}

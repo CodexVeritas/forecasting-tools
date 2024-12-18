@@ -2,6 +2,7 @@ import logging
 from unittest.mock import Mock
 
 import pytest
+import typeguard
 
 from code_tests.unit_tests.test_forecasting.forecasting_test_manager import (
     ForecastingTestManager,
@@ -62,7 +63,7 @@ async def test_predicts_test_question(
 async def test_collects_reports_on_open_questions(mocker: Mock) -> None:
     bot_type = TemplateBot
     bot = bot_type()
-    ForecastingTestManager.mock_forecast_bot_forecast(bot_type, mocker)
+    ForecastingTestManager.mock_forecast_bot_run_forecast(bot_type, mocker)
     tournament_id = (
         ForecastingTestManager.TOURNAMENT_WITH_MIXTURE_OF_OPEN_AND_NOT_OPEN
     )
@@ -73,3 +74,31 @@ async def test_collects_reports_on_open_questions(mocker: Mock) -> None:
     assert len(reports) == len(
         questions_that_should_be_being_forecast_on
     ), "Not all questions were forecasted on"
+
+
+async def test_no_reports_when_questions_already_forecasted(
+    mocker: Mock,
+) -> None:
+    bot_type = TemplateBot
+    bot = bot_type(skip_previously_forecasted_questions=True)
+    ForecastingTestManager.mock_forecast_bot_run_forecast(bot_type, mocker)
+    questions = [
+        ForecastingTestManager.get_question_safe_to_pull_and_push_to()
+    ]
+    questions = typeguard.check_type(questions, list[Question])
+
+    for question in questions:
+        question.already_forecasted = True
+
+    reports = await bot.forecast_questions(questions)
+    assert (
+        len(reports) == 0
+    ), "Expected no reports since all questions were already forecasted on"
+
+    for question in questions:
+        question.already_forecasted = False
+
+    reports = await bot.forecast_questions(questions)
+    assert len(reports) == len(
+        questions
+    ), "Expected all questions to be forecasted on"

@@ -67,6 +67,7 @@ class MultipleChoiceReport(ForecastReport):
         for current_option_name in first_list_option_names:
             probabilities_of_current_option = [
                 option.probability
+                for option_list in predictions
                 for option in option_list.predicted_options
                 if option.option_name == current_option_name
             ]

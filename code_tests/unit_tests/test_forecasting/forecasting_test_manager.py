@@ -73,7 +73,7 @@ class ForecastingTestManager:
         )
 
     @staticmethod
-    def mock_forecast_bot_forecast(
+    def mock_forecast_bot_run_forecast(
         subclass: type[ForecastBot], mocker: Mock
     ) -> Mock:
         test_binary_question = (

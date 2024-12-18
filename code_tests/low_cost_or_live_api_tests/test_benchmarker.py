@@ -21,7 +21,7 @@ async def test_file_is_made_for_benchmark(mocker: Mock) -> None:
     bot_type = TemplateBot
     bot = bot_type()
 
-    ForecastingTestManager.mock_forecast_bot_forecast(bot_type, mocker)
+    ForecastingTestManager.mock_forecast_bot_run_forecast(bot_type, mocker)
 
     file_path_to_save_reports = "logs/forecasts/benchmarks/"
     absolute_path = file_manipulation.get_absolute_path(
@@ -58,7 +58,7 @@ async def test_each_benchmark_mode_calls_forecaster_more_time(
     bot_type = TemplateBot
     bot = bot_type()
 
-    mock_run_forecast = ForecastingTestManager.mock_forecast_bot_forecast(
+    mock_run_forecast = ForecastingTestManager.mock_forecast_bot_run_forecast(
         bot_type, mocker
     )
 

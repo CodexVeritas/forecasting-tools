@@ -209,6 +209,7 @@ class NumericReport(ForecastReport):
     async def aggregate_predictions(
         cls, predictions: list[NumericDistribution], question: NumericQuestion
     ) -> NumericDistribution:
+        assert predictions, "No predictions to aggregate"
         cdfs = [prediction.cdf for prediction in predictions]
         all_percentiles_of_cdf: list[list[float]] = []
         all_values_of_cdf: list[list[float]] = []
