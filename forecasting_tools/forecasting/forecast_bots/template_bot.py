@@ -250,10 +250,10 @@ class TemplateBot(ForecastBot):
                     matching_lines.append(line)
 
             if matching_lines:
-                last_line = matching_lines[-1]
+                last_matching_line = matching_lines[-1]
                 # Extract all numbers from the line
                 numbers_as_string = re.findall(
-                    r"-?\d+(?:,\d{3})*(?:\.\d+)?", last_line
+                    r"-?\d+(?:,\d{3})*(?:\.\d+)?", last_matching_line
                 )
                 numbers_as_float = [
                     float(num.replace(",", "")) for num in numbers_as_string

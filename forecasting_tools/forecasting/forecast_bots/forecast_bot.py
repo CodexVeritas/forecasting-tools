@@ -78,16 +78,16 @@ class ForecastBot(ABC):
         questions = MetaculusApi.get_all_open_questions_from_tournament(
             tournament_id
         )
-
         return await self.forecast_questions(questions)
 
     async def forecast_question(
         self,
         question: MetaculusQuestion,
     ) -> ForecastReport:
+        assert (
+            not self.skip_previously_forecasted_questions
+        ), "Skipping questions is not supported for single question forecasts"
         reports = await self.forecast_questions([question])
-        if len(reports) != 1:
-            logger.error(f"Expected 1 report, got {len(reports)}")
         return reports[0]
 
     async def forecast_questions(
@@ -128,7 +128,7 @@ class ForecastBot(ABC):
         with MonetaryCostManager() as cost_manager:
             start_time = time.time()
             tasks = [
-                self.research_and_make_predictions(question)
+                self._research_and_make_predictions(question)
                 for _ in range(self.research_reports_per_question)
             ]
             research_with_predictions_unit, _ = (
@@ -177,6 +177,9 @@ class ForecastBot(ABC):
 
     @abstractmethod
     async def run_research(self, question: MetaculusQuestion) -> str:
+        """
+        Researches a question and returns markdown report
+        """
         raise NotImplementedError("Subclass must implement this method")
 
     @abstractmethod
@@ -197,7 +200,7 @@ class ForecastBot(ABC):
     ) -> ReasonedPrediction[NumericDistribution]:
         raise NotImplementedError("Subclass must implement this method")
 
-    async def research_and_make_predictions(
+    async def _research_and_make_predictions(
         self, question: MetaculusQuestion
     ) -> ResearchWithPredictions:
         research = await self.run_research(question)
@@ -256,48 +259,28 @@ class ForecastBot(ABC):
             type(question)
         )
 
-        summaries = []
-        full_research_reports = []
-        rationales = []
+        all_summaries = []
+        all_core_research = []
+        all_forecaster_rationales = []
         for i, collection in enumerate(research_prediction_collections):
-            forecaster_prediction_bullet_points = ""
-            for j, forecast in enumerate(collection.predictions):
-                readable_prediction = report_type.make_readable_prediction(
-                    forecast.prediction_value
-                )
-                forecaster_prediction_bullet_points += (
-                    f"*Forecaster {j + 1}*: {readable_prediction}\n"
-                )
-
-            new_summary = clean_indents(
-                f"""
-                ## Report {i + 1} Summary
-                ### Forecasts
-                {forecaster_prediction_bullet_points}
-
-                ### Research Summary
-                {collection.summary_report}
-                """
+            summary = self._format_and_expand_research_summary(
+                i + 1, report_type, collection
             )
-            summaries.append(new_summary)
-
-            modified_research_report = self.__add_report_number_to_headings(
-                i + 1, collection.research_report
+            core_research_for_collection = self._format_main_research(
+                i + 1, collection
             )
-            full_research_reports.append(modified_research_report)
+            forecaster_rationales_for_collection = (
+                self._format_forecaster_rationales(i + 1, collection)
+            )
+            all_summaries.append(summary)
+            all_core_research.append(core_research_for_collection)
+            all_forecaster_rationales.append(
+                forecaster_rationales_for_collection
+            )
 
-            for j, forecast in enumerate(collection.predictions):
-                new_rationale = clean_indents(
-                    f"""
-                    ## R{i + 1}: Forecaster {j + 1} Reasoning
-                    {forecast.reasoning}
-                    """
-                )
-                rationales.append(new_rationale)
-
-        combined_summaries = "\n".join(summaries)
-        combined_research_reports = "\n".join(full_research_reports)
-        combined_rationales = "\n".join(rationales)
+        combined_summaries = "\n".join(all_summaries)
+        combined_research_reports = "\n".join(all_core_research)
+        combined_rationales = "\n".join(all_forecaster_rationales)
         full_explanation_without_summary = clean_indents(
             f"""
             # SUMMARY
@@ -318,18 +301,61 @@ class ForecastBot(ABC):
         return full_explanation_without_summary
 
     @classmethod
-    def __add_report_number_to_headings(
+    def _format_and_expand_research_summary(
         cls,
         report_number: int,
-        markdown: str,
+        report_type: type[ForecastReport],
+        predicted_research: ResearchWithPredictions,
     ) -> str:
+        forecaster_prediction_bullet_points = ""
+        for j, forecast in enumerate(predicted_research.predictions):
+            readable_prediction = report_type.make_readable_prediction(
+                forecast.prediction_value
+            )
+            forecaster_prediction_bullet_points += (
+                f"*Forecaster {j + 1}*: {readable_prediction}\n"
+            )
+
+        new_summary = clean_indents(
+            f"""
+            ## Report {report_number} Summary
+            ### Forecasts
+            {forecaster_prediction_bullet_points}
+
+            ### Research Summary
+            {predicted_research.summary_report}
+            """
+        )
+        return new_summary
+
+    @classmethod
+    def _format_main_research(
+        cls, report_number: int, predicted_research: ResearchWithPredictions
+    ) -> str:
+        markdown = predicted_research.research_report
         lines = markdown.split("\n")
         modified_content = ""
+
+        # Add Report number to all headings
         for line in lines:
             if line.startswith("## "):
                 line = f"## R{report_number}: {line[3:]}"
             modified_content += line + "\n"
         return modified_content
+
+    def _format_forecaster_rationales(
+        self, report_number: int, collection: ResearchWithPredictions
+    ) -> str:
+        rationales = []
+        for j, forecast in enumerate(collection.predictions):
+            new_rationale = clean_indents(
+                f"""
+                ## R{report_number}: Forecaster {j + 1} Reasoning
+                {forecast.reasoning}
+                """
+            )
+            rationales.append(new_rationale)
+        return "\n".join(rationales)
 
     def __create_file_path_to_save_to(
         self, questions: list[MetaculusQuestion]

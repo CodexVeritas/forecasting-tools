@@ -92,6 +92,10 @@ def test_large_lists_fail(things_to_generate: str) -> None:
                 "2010 Moldovan constitutional referendum",  # See above
                 "2019 Moldovan referendum",  # See above
                 "2024 Moldovan European Union membership referendum",  # See above
+                # Should I add this to the lists? -> "2014 Gagauzia Referendum on Customs Union",
+                # https://www.rferl.org/a/moldova-gagauz-referendum-counting/25251251.html
+                # Moldova said it was illegal, but it passed with 98% https://balkaninsight.com/2024/01/31/moldova-condemns-separatist-march-in-restive-gagauzia-region/
+                # See Perplexity's attempt: https://www.perplexity.ai/search/list-for-me-every-moldovan-ref-qxcLgs2WQbSpW8HDIayNEg
             ],
         ),
         (
@@ -163,6 +167,7 @@ def test_large_lists_fail(things_to_generate: str) -> None:
                 "Typhoon Touch Technologies (touch screen)",
                 "Nokia v. Apple (wireless, iPhone)",
                 "Ericsson vs. Apple",
+                # Consider if Perplexity got any that I missed (see second message) https://www.perplexity.ai/search/countries-that-have-successful-b2nwlS8DSeqIjBFsKm94og
             ],
         ),  # See above
         (
