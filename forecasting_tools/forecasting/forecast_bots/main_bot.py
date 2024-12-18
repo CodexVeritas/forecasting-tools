@@ -8,9 +8,9 @@ from forecasting_tools.forecasting.forecast_bots.template_bot import (
 from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ReasonedPrediction,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
+from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
-    MetaculusQuestion,
+    Question,
 )
 from forecasting_tools.forecasting.sub_question_researchers.research_coordinator import (
     ResearchCoordinator,
@@ -50,7 +50,7 @@ class MainBot(TemplateBot):
             number_of_base_rates_to_do_deep_research_on
         )
 
-    async def run_research(self, question: MetaculusQuestion) -> str:
+    async def run_research(self, question: Question) -> str:
         research_manager = ResearchCoordinator(question)
         combined_markdown = (
             await research_manager.create_full_markdown_research_report(
@@ -62,7 +62,7 @@ class MainBot(TemplateBot):
         return combined_markdown
 
     async def summarize_research(
-        self, question: MetaculusQuestion, research: str
+        self, question: Question, research: str
     ) -> str:
         research_coordinator = ResearchCoordinator(question)
         summary_report = (

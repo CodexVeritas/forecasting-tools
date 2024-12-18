@@ -13,12 +13,12 @@ from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
+from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
-    MetaculusQuestion,
+    Question,
 )
 
-T = TypeVar("T", bound=MetaculusQuestion)
+T = TypeVar("T", bound=Question)
 
 
 class ForecastingTestManager:

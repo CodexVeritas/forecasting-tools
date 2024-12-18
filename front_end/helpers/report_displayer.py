@@ -9,7 +9,7 @@ from streamlit.delta_generator import DeltaGenerator
 from forecasting_tools.forecasting.questions_and_reports.binary_report import (
     BinaryReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
+from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_section import (

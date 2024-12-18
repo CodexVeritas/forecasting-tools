@@ -4,7 +4,7 @@ from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ForecastReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
+from forecasting_tools.forecasting.questions_and_reports.questions import (
     MultipleChoiceQuestion,
 )
 
@@ -14,13 +14,13 @@ class PredictedOption(BaseModel):
     probability: float = Field(ge=0, le=1)
 
 
-class PredictedOptionSet(BaseModel):
+class PredictedOptionList(BaseModel):
     predicted_options: list[PredictedOption]
 
 
 class MultipleChoiceReport(ForecastReport):
     question: MultipleChoiceQuestion
-    prediction: PredictedOptionSet
+    prediction: PredictedOptionList
 
     async def publish_report_to_metaculus(self) -> None:
         if self.question.id_of_question is None:
@@ -39,32 +39,35 @@ class MultipleChoiceReport(ForecastReport):
     @classmethod
     async def aggregate_predictions(
         cls,
-        predictions: list[PredictedOptionSet],
+        predictions: list[PredictedOptionList],
         question: MultipleChoiceQuestion,
-    ) -> PredictedOptionSet:
-        first_prediction_option_names = {
+    ) -> PredictedOptionList:
+        first_list_option_names = [
             pred_option.option_name
             for pred_option in predictions[0].predicted_options
-        }
+        ]
 
-        for prediction in predictions:
-            current_prediction_option_names = {
-                option.option_name for option in prediction.predicted_options
+        # Check for predicted option consistency
+        for option_list in predictions:
+            current_option_names = {
+                option.option_name for option in option_list.predicted_options
             }
-            assert (
-                current_prediction_option_names
-                == first_prediction_option_names
+            assert current_option_names == set(
+                first_list_option_names
             ), "All predictions must have the same option names"
-            for option in prediction.predicted_options:
+            assert len(option_list.predicted_options) == len(
+                first_list_option_names
+            ), "All predictions must have the same number of options"
+            for option in option_list.predicted_options:
                 assert (
                     0 <= option.probability <= 1
                 ), "Predictions must be between 0 and 1"
 
         new_predicted_options: list[PredictedOption] = []
-        for current_option_name in list(first_prediction_option_names):
+        for current_option_name in first_list_option_names:
             probabilities_of_current_option = [
                 option.probability
-                for option in prediction.predicted_options
+                for option in option_list.predicted_options
                 if option.option_name == current_option_name
             ]
 
@@ -77,10 +80,10 @@ class MultipleChoiceReport(ForecastReport):
                     probability=average_probability,
                 )
             )
-        return PredictedOptionSet(predicted_options=new_predicted_options)
+        return PredictedOptionList(predicted_options=new_predicted_options)
 
     @classmethod
-    def make_readable_prediction(cls, prediction: PredictedOptionSet) -> str:
+    def make_readable_prediction(cls, prediction: PredictedOptionList) -> str:
         option_bullet_points = [
             f"- {option.option_name}: {round(option.probability * 100, 2)}%"
             for option in prediction.predicted_options

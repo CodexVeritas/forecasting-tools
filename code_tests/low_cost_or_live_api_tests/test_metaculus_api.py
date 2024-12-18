@@ -7,12 +7,12 @@ from code_tests.unit_tests.test_forecasting.forecasting_test_manager import (
     ForecastingTestManager,
 )
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
+from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
     DateQuestion,
-    MetaculusQuestion,
     MultipleChoiceQuestion,
     NumericQuestion,
+    Question,
     QuestionState,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_organizer import (
@@ -198,7 +198,7 @@ def test_get_benchmark_questions(num_questions_to_get: int) -> None:
 
 
 def assert_basic_question_attributes_not_none(
-    question: MetaculusQuestion, question_id: int
+    question: Question, question_id: int
 ) -> None:
     assert question.resolution_criteria is not None
     assert question.fine_print is not None

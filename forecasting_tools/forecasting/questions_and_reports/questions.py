@@ -17,7 +17,7 @@ class QuestionState(Enum):
     OTHER = "other"
 
 
-class MetaculusQuestion(BaseModel, Jsonable):
+class Question(BaseModel, Jsonable):
     question_text: str
     page_url: str | None = None
     id_of_post: int = Field(
@@ -41,7 +41,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
     already_forecasted: bool = False
 
     @classmethod
-    def from_metaculus_api_json(cls, post_api_json: dict) -> MetaculusQuestion:
+    def from_metaculus_api_json(cls, post_api_json: dict) -> Question:
         post_id = post_api_json["id"]
         logger.debug(f"Processing Post ID {post_id}")
         json_state = post_api_json["status"]
@@ -68,7 +68,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
             else None
         )
 
-        return MetaculusQuestion(
+        return Question(
             state=question_state,
             question_text=question_json["title"],
             id_of_post=post_id,
@@ -136,7 +136,7 @@ class MetaculusQuestion(BaseModel, Jsonable):
         return question_details.strip()
 
 
-class BinaryQuestion(MetaculusQuestion):
+class BinaryQuestion(Question):
     community_prediction_at_access_time: float | None = None
 
     @classmethod
@@ -190,7 +190,7 @@ class BoundedQuestionMixin:
         )
 
 
-class DateQuestion(MetaculusQuestion, BoundedQuestionMixin):
+class DateQuestion(Question, BoundedQuestionMixin):
     upper_bound: datetime
     lower_bound: datetime
     upper_bound_is_hard_limit: bool
@@ -226,7 +226,7 @@ class DateQuestion(MetaculusQuestion, BoundedQuestionMixin):
         return "date"
 
 
-class NumericQuestion(MetaculusQuestion, BoundedQuestionMixin):
+class NumericQuestion(Question, BoundedQuestionMixin):
     upper_bound: float
     lower_bound: float
     open_upper_bound: bool
@@ -260,7 +260,7 @@ class NumericQuestion(MetaculusQuestion, BoundedQuestionMixin):
         return "numeric"
 
 
-class MultipleChoiceQuestion(MetaculusQuestion):
+class MultipleChoiceQuestion(Question):
     options: list[str]
 
     @classmethod

@@ -5,8 +5,8 @@ from forecasting_tools.forecasting.forecast_bots.main_bot import MainBot
 from forecasting_tools.forecasting.forecast_bots.template_bot import (
     TemplateBot,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
-    MetaculusQuestion,
+from forecasting_tools.forecasting.questions_and_reports.questions import (
+    Question,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_organizer import (
     ReportOrganizer,
@@ -27,7 +27,7 @@ def get_bots_for_cheap_tests() -> list[ForecastBot]:
 
 
 def get_cheap_bot_question_type_pairs() -> (
-    list[tuple[type[MetaculusQuestion], ForecastBot]]
+    list[tuple[type[Question], ForecastBot]]
 ):
     return [
         (question_type, bot)

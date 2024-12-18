@@ -7,22 +7,22 @@ from forecasting_tools.forecasting.questions_and_reports.binary_report import (
 from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ForecastReport,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
-    BinaryQuestion,
-    MetaculusQuestion,
-    MultipleChoiceQuestion,
-    NumericQuestion,
-)
 from forecasting_tools.forecasting.questions_and_reports.multiple_choice_report import (
     MultipleChoiceReport,
 )
 from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
     NumericReport,
 )
+from forecasting_tools.forecasting.questions_and_reports.questions import (
+    BinaryQuestion,
+    MultipleChoiceQuestion,
+    NumericQuestion,
+    Question,
+)
 
 
 class TypeMapping(BaseModel):
-    question_type: type[MetaculusQuestion]
+    question_type: type[Question]
     test_post_id: int
     report_type: type[ForecastReport] | None
 
@@ -53,9 +53,9 @@ class ReportOrganizer:
 
     @classmethod
     def get_example_question_id_for_question_type(
-        cls, question_type: type[MetaculusQuestion]
+        cls, question_type: type[Question]
     ) -> int:
-        assert issubclass(question_type, MetaculusQuestion)
+        assert issubclass(question_type, Question)
         for mapping in cls.__TYPE_MAPPING:
             if mapping.question_type == question_type:
                 return mapping.test_post_id
@@ -63,9 +63,9 @@ class ReportOrganizer:
 
     @classmethod
     def get_report_type_for_question_type(
-        cls, question_type: type[MetaculusQuestion]
+        cls, question_type: type[Question]
     ) -> type[ForecastReport]:
-        assert issubclass(question_type, MetaculusQuestion)
+        assert issubclass(question_type, Question)
         for mapping in cls.__TYPE_MAPPING:
             if mapping.question_type == question_type:
                 if mapping.report_type is None:
@@ -77,9 +77,9 @@ class ReportOrganizer:
 
     @classmethod
     def get_live_example_question_of_type(
-        cls, question_type: type[MetaculusQuestion]
-    ) -> MetaculusQuestion:
-        assert issubclass(question_type, MetaculusQuestion)
+        cls, question_type: type[Question]
+    ) -> Question:
+        assert issubclass(question_type, Question)
         question_id = cls.get_example_question_id_for_question_type(
             question_type
         )
@@ -96,5 +96,5 @@ class ReportOrganizer:
         ]
 
     @classmethod
-    def get_all_question_types(cls) -> list[type[MetaculusQuestion]]:
+    def get_all_question_types(cls) -> list[type[Question]]:
         return [mapping.question_type for mapping in cls.__TYPE_MAPPING]

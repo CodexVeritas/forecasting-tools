@@ -3,17 +3,11 @@
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 [![Discord](https://img.shields.io/badge/Discord-Join-blue)](https://discord.gg/Dtq4JNdXnw)
 
-Last Update: Nov 3 2024
+Last Update: Dec 17 2024
 
 
 # Quick Install
 Install this package with `pip install forecasting-tools`
-
-If you want to use advanced SmartSearcher functionality, you might also need to run:
-```bash
-playwright install
-playwright install-deps
-```
 
 # Overview
 Demo website: https://mokoresearch.streamlit.app/
@@ -21,25 +15,32 @@ Demo website: https://mokoresearch.streamlit.app/
 This repository contains forecasting and research tools built with Python and Streamlit. The project aims to assist users in making predictions, conducting research, and analyzing data related to hard to answer questions (especially those from Metaculus).
 
 Key features: Tools most likely to be useful to you
+- 🎯 **Forecasting Bot:** General Forecaster that integrates with the Metaculus AI benchmarking competition. You can forecast with a pre-existing bot or override the class to customize your own (without redoing all the API code, etc)
 - 🔍 **Perplexity++ Smart Searcher:** Smart Searcher for AI-powered internet powered by Exa.ai that is configurable, more accurate, able to decide on filters, able to link to exact paragraphs, and generally better than Perplexity.ai.
 - 🔑 **Key Factor Analysis:** Key Factors Analysis for scoring, ranking, and prioritizing important variables in forecasting questions
-- 🎯 **Forecasting Bot:** General Forecaster (Forecast Team) that integrates with the Metaculus AI benchmarking competition and really any other question you have.
+
 
 Here are some other cool components and features of the project:
-- **Base Rate Researcher:** for calculating event probabilities
-- **Niche List Researcher:** for analyzing very specific lists of past events or items
-- **Fermi Estimator:** for breaking down numerical estimates
-- **Team Manager:** for automating forecasts across multiple questions
+- **Base Rate Researcher:** for calculating event probabilities (still experimental)
+- **Niche List Researcher:** for analyzing very specific lists of past events or items (still experimental)
+- **Fermi Estimator:** for breaking down numerical estimates (still experimental)
 - **Metaculus API Wrapper:** for interacting with questions and tournaments
-- **AI Model Wrappers:** (GPT-4, Claude 3.5, Perplexity) with reliability upgrades, cost management, structured outputs, etc
 - **Monetary Cost Manager:** for tracking AI and API expenses
 
-Join the [discord](https://discord.gg/Dtq4JNdXnw) for updates and to give feedback (btw feedback is very appreciated, even just a quick 'thank you' or 'I decided not to use the tool for reason X' is helpful to know)
+Join the [discord](https://discord.gg/Dtq4JNdXnw) for updates and to give feedback (btw feedback is very appreciated, even just a quick 'I did/didn't decide to use the tool for reason X' is helpful to know)
 
-Note: AI inaccuracies are expected (with some tools morethan others), and the package api isn't guaranteed to stay consistent (though I will shoot to keep it stable).
+Note: This package is still in a experimental phase, though I'm shooting to keep the API fairly stable. I'll especially try to keep the ForecastBot and TemplateBot APIs consistent.
 
+# Forecasting Bot Building
 
-# Examples
+## Using Preexisting bot
+
+## Building your own bot
+- forking
+- env variables
+- enabling actions
+
+# Forecasting Tools Examples
 
 ## Smart Searcher
 The Smart Searcher acts like an LLM with internet access. It works a lot like Perplexity.ai API, except:
@@ -256,58 +257,6 @@ Example output (Fake data with links not added):
 >
 > **Background Research**: [Additional research details...]
 
-
-## Forecast Team (General Forecaster)
-The Forecast Team combines multiple forecasting approaches to analyze and make predictions for Metaculus questions:
-
-```python
-from forecasting_tools import ForecastTeam, BinaryQuestion
-
-# Consider using MetaculusApi.get_question_by_id or MetaculusApi.get_question_by_url instead
-question = BinaryQuestion(
-    question_text="Will humanity be extinct by 2100?",
-    background_info=None,
-    resolution_criteria=None,
-    fine_print=None,
-    question_id=0
-)
-
-team = ForecastTeam(question=question)
-
-report = await team.run_forecast()
-
-print(f"Prediction: {report.prediction:.1%}")
-print(report.explanation)
-```
-
-## Team Manager
-The Team Manager helps automate forecasting across multiple questions, particularly useful for Metaculus AI Benchmarking Competition and tournament participation. It can run forecasts on all open questions in a tournament, publish predictions, and can benchmark the Forecast Team's performance.
-
-Benchmarks are run by comparing the community forecast to the team forecast on a semi-random filtered set of binary open questions. This isn't a perfect way to measure, but better than waiting till the end of a tournament or doing it manually. Benchmarks can be viewed by plugging it into the front end benchmark page.
-
-
-```python
-from forecasting_tools import TeamManager
-
-manager = TeamManager(time_to_wait_between_questions=60)
-
-# Run and publish forecasts for all open questions in a tournament
-reports = await manager.run_and_publish_forecasts_on_all_open_questions(
-    tournament_id=3672
-)
-
-# Or run forecasts without publishing
-reports = await manager.run_forecasts_on_all_open_questions(
-    tournament_id=3672
-)
-
-# Score the current iteration of the Forecast Team
-score = await manager.benchmark_forecast_team(
-    evaluation_depth="deep"
-)
-print(f"Average deviation score: {score:.3f}")
-```
-
 ## Metaculus API
 The Metaculus API wrapper helps interact with Metaculus questions and tournaments. Grabbing questions returns a pydantic object, and supports important information for Binary, Multiple Choice, Numeric,and Date questions.
 
@@ -329,19 +278,8 @@ MetaculusApi.post_question_comment(
 )
 benchmark_questions = MetaculusApi.get_benchmark_questions(
     num_of_questions_to_return=20
-) # See mention of benchmark questions in Team Manager section
+)
 ```
-
-## AI Models
-Wrapper classes on a number of AI models are provided that include, structured output, retry, cost management, token limiting, rate limiting, timeouts, and more. See `forecasting_tools/ai_models/README.md` for more details. As of last update, token and rate limiting are set to the publisher's limits, and needs to be extracted into an environment setting.
-
-Models included are:
-- GPT-4o
-- GPT-o1
-- GPT-4o-vision
-- Claude 3.5 Sonnet
-- Perplexity
-- Metaculus Proxy (specifically for GPT-4o)
 
 ## Monetary Cost Manager
 The Monetary Cost Manager helps to track AI and API costs. It tracks expenses and errors if it goes over the limit. Leave the limit empty to disable the limit. It shouldn't be trusted as an exact expense, but a good estimate of costs. See `forecasting_tools/ai_models/README.md` for more details, and some flaws it has.

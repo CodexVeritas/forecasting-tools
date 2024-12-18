@@ -11,18 +11,18 @@ from typing import Any, Sequence, TypeVar
 import requests
 import typeguard
 
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
+from forecasting_tools.forecasting.questions_and_reports.questions import (
     BinaryQuestion,
     DateQuestion,
-    MetaculusQuestion,
     MultipleChoiceQuestion,
     NumericQuestion,
+    Question,
 )
 from forecasting_tools.util.misc import raise_for_status_with_additional_info
 
 logger = logging.getLogger(__name__)
 
-Q = TypeVar("Q", bound=MetaculusQuestion)
+Q = TypeVar("Q", bound=Question)
 
 
 class MetaculusApi:
@@ -123,7 +123,7 @@ class MetaculusApi:
         raise_for_status_with_additional_info(response)
 
     @classmethod
-    def get_question_by_url(cls, question_url: str) -> MetaculusQuestion:
+    def get_question_by_url(cls, question_url: str) -> Question:
         """
         URL looks like https://www.metaculus.com/questions/28841/will-eric-adams-be-the-nyc-mayor-on-january-1-2025/
         """
@@ -136,7 +136,7 @@ class MetaculusApi:
         return cls.get_question_by_post_id(question_id)
 
     @classmethod
-    def get_question_by_post_id(cls, post_id: int) -> MetaculusQuestion:
+    def get_question_by_post_id(cls, post_id: int) -> Question:
         logger.info(f"Retrieving question details for question {post_id}")
         url = f"{cls.API_BASE_URL}/posts/{post_id}/"
         response = requests.get(
@@ -155,7 +155,7 @@ class MetaculusApi:
     def get_all_open_questions_from_tournament(
         cls,
         tournament_id: int,
-    ) -> list[MetaculusQuestion]:
+    ) -> list[Question]:
         logger.info(f"Retrieving questions from tournament {tournament_id}")
         url_qparams = {
             "tournaments": [tournament_id],
@@ -297,7 +297,7 @@ class MetaculusApi:
     @classmethod
     def __get_questions_from_api(
         cls, params: dict[str, Any], use_old_api: bool = False
-    ) -> list[MetaculusQuestion]:
+    ) -> list[Question]:
         num_requested = params.get("limit")
         assert (
             num_requested is None
@@ -333,9 +333,7 @@ class MetaculusApi:
         return questions
 
     @classmethod
-    def __metaculus_api_json_to_question(
-        cls, api_json: dict
-    ) -> MetaculusQuestion:
+    def __metaculus_api_json_to_question(cls, api_json: dict) -> Question:
         assert (
             "question" in api_json
         ), f"Question not found in API JSON: {api_json}"

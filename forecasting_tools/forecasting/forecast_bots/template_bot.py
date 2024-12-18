@@ -1,35 +1,45 @@
+import logging
+import os
 import re
 from datetime import datetime
 
 from forecasting_tools.ai_models.ai_utils.ai_misc import clean_indents
 from forecasting_tools.ai_models.gpt4o import Gpt4o
+from forecasting_tools.ai_models.metaculus4o import Gpt4oMetaculusProxy
 from forecasting_tools.ai_models.perplexity import Perplexity
 from forecasting_tools.forecasting.forecast_bots.forecast_bot import (
     ForecastBot,
 )
+from forecasting_tools.forecasting.helpers.smart_searcher import SmartSearcher
 from forecasting_tools.forecasting.questions_and_reports.forecast_report import (
     ReasonedPrediction,
 )
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
-    BinaryQuestion,
-    MetaculusQuestion,
-    MultipleChoiceQuestion,
-    NumericQuestion,
-)
 from forecasting_tools.forecasting.questions_and_reports.multiple_choice_report import (
     PredictedOption,
-    PredictedOptionSet,
+    PredictedOptionList,
 )
 from forecasting_tools.forecasting.questions_and_reports.numeric_report import (
     NumericDistribution,
     Percentile,
 )
+from forecasting_tools.forecasting.questions_and_reports.questions import (
+    BinaryQuestion,
+    MultipleChoiceQuestion,
+    NumericQuestion,
+    Question,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class TemplateBot(ForecastBot):
-    FINAL_DECISION_LLM = Gpt4o(temperature=0.7)
+    FINAL_DECISION_LLM = (
+        Gpt4oMetaculusProxy(temperature=0.7)
+        if os.getenv("METACULUS_TOKEN")
+        else Gpt4o(temperature=0.7)
+    )
 
-    async def run_research(self, question: MetaculusQuestion) -> str:
+    async def run_research(self, question: Question) -> str:
         system_prompt = clean_indents(
             """
             You are an assistant to a superforecaster.
@@ -50,7 +60,17 @@ class TemplateBot(ForecastBot):
             {question.background_info}
             """
         )
-        response = await Perplexity(system_prompt=system_prompt).invoke(prompt)
+        if os.getenv("PERPLEXITY_API_KEY"):
+            response = await Perplexity(system_prompt=system_prompt).invoke(
+                prompt
+            )
+        elif os.getenv("EXA_API_KEY"):
+            response = await SmartSearcher().invoke(prompt)
+        else:
+            logger.error(
+                "No API keys for csearh. Skipping research and setting it blank."
+            )
+            response = ""
         return response
 
     async def _run_forecast_on_binary(
@@ -99,7 +119,7 @@ class TemplateBot(ForecastBot):
 
     async def _run_forecast_on_multiple_choice(
         self, question: MultipleChoiceQuestion, research: str
-    ) -> ReasonedPrediction[PredictedOptionSet]:
+    ) -> ReasonedPrediction[PredictedOptionList]:
         prompt = clean_indents(
             f"""
             You are a professional forecaster interviewing for a job.
@@ -137,11 +157,10 @@ class TemplateBot(ForecastBot):
             Option_N: Probability_N
             """
         )
-        gpt_forecast = await self.FINAL_DECISION_LLM.invoke(prompt)
+        reasoning = await self.FINAL_DECISION_LLM.invoke(prompt)
         prediction = self._extract_forecast_from_multiple_choice_rationale(
-            gpt_forecast, question.options
+            reasoning, question.options
         )
-        reasoning = gpt_forecast
         return ReasonedPrediction(
             prediction_value=prediction, reasoning=reasoning
         )
@@ -238,7 +257,7 @@ class TemplateBot(ForecastBot):
 
     def _extract_forecast_from_multiple_choice_rationale(
         self, reasoning: str, options: list[str]
-    ) -> PredictedOptionSet:
+    ) -> PredictedOptionList:
         option_probabilities = []
 
         # Iterate through each line in the text
@@ -298,7 +317,7 @@ class TemplateBot(ForecastBot):
                 )
             )
 
-        return PredictedOptionSet(predicted_options=predicted_options)
+        return PredictedOptionList(predicted_options=predicted_options)
 
     def _extract_forecast_from_numeric_rationale(
         self, reasoning: str, question: NumericQuestion

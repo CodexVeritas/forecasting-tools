@@ -19,8 +19,8 @@ from forecasting_tools.forecasting.forecast_bots.template_bot import (
     TemplateBot,
 )
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
-from forecasting_tools.forecasting.questions_and_reports.metaculus_questions import (
-    MetaculusQuestion,
+from forecasting_tools.forecasting.questions_and_reports.questions import (
+    Question,
 )
 from forecasting_tools.forecasting.questions_and_reports.report_organizer import (
     ReportOrganizer,
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
     "question_type, bot", get_cheap_bot_question_type_pairs()
 )
 async def test_predicts_test_question(
-    question_type: type[MetaculusQuestion],
+    question_type: type[Question],
     bot: ForecastBot,
 ) -> None:
 
