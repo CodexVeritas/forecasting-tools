@@ -43,4 +43,5 @@ jobs:
           EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
+          CODA_API_KEY: ${{ secrets.CODA_API_KEY }}
           PYTHONPATH: .

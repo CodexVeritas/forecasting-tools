@@ -13,6 +13,8 @@ top_level_dir = os.path.abspath(os.path.join(current_dir, "../"))
 sys.path.append(top_level_dir)
 dotenv.load_dotenv()
 
+import logging
+
 from forecasting_tools.forecasting.forecast_bots.main_bot import MainBot
 from forecasting_tools.forecasting.forecast_bots.template_bot import (
     TemplateBot,
@@ -23,6 +25,8 @@ from forecasting_tools.forecasting.helpers.forecast_database_manager import (
 )
 from forecasting_tools.forecasting.helpers.metaculus_api import MetaculusApi
 from forecasting_tools.util.custom_logger import CustomLogger
+
+logger = logging.getLogger(__name__)
 
 
 def get_forecaster(bot_type: str, allow_rerun: bool) -> TemplateBot | MainBot:
@@ -59,11 +63,16 @@ async def run_morning_forecasts(bot_type: str, allow_rerun: bool) -> None:
     forecaster = get_forecaster(bot_type, allow_rerun)
     TOURNAMENT_ID = MetaculusApi.AI_COMPETITION_ID_Q4
     reports = await forecaster.forecast_on_tournament(TOURNAMENT_ID)
-    for report in reports:
-        await asyncio.sleep(5)
-        ForecastDatabaseManager.add_forecast_report_to_database(
-            report, ForecastRunType.REGULAR_FORECAST
-        )
+
+    if os.environ.get("CODA_API_KEY"):
+        for report in reports:
+            await asyncio.sleep(5)
+            try:
+                ForecastDatabaseManager.add_forecast_report_to_database(
+                    report, ForecastRunType.REGULAR_FORECAST
+                )
+            except Exception as e:
+                logger.error(f"Error adding forecast report to database: {e}")
 
 
 if __name__ == "__main__":

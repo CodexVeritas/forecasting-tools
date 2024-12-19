@@ -40,4 +40,5 @@ jobs:
           METACULUS_TOKEN: ${{ secrets.METACULUS_TOKEN }}
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
           EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+          CODA_API_KEY: ${{ secrets.CODA_API_KEY }}
           PYTHONPATH: .
