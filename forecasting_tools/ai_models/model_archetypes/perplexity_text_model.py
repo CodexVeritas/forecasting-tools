@@ -26,7 +26,11 @@ class PerplexityTextModel(OpenAiTextToTextModel, PricedPerRequest, ABC):
     PRICE_PER_TOKEN: float
     PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
     _OPENAI_ASYNC_CLIENT = AsyncOpenAI(
-        api_key=PERPLEXITY_API_KEY,
+        api_key=(
+            PERPLEXITY_API_KEY
+            if PERPLEXITY_API_KEY is not None
+            else "fake_key_so_it_doesn't_error_on_initialization"
+        ),
         base_url="https://api.perplexity.ai",
         max_retries=0,  # Retry is implemented locally
     )

@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 
 class OpenAiTextToTextModel(TraditionalOnlineLlm, ABC):
     _OPENAI_ASYNC_CLIENT = AsyncOpenAI(
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=(
+            os.getenv("OPENAI_API_KEY")
+            if os.getenv("OPENAI_API_KEY") is not None
+            else "fake_key_so_it_doesn't_error_on_initialization"
+        ),
         max_retries=0,  # Retry is implemented locally
     )
 
