@@ -48,7 +48,7 @@ class CustomLogger:
         handlers = []
 
         file_writing_is_allowed = (
-            os.environ.get("FILE_WRITING_ALLOWED", "TRUE").upper() == "TRUE"
+            os.environ.get("FILE_WRITING_ALLOWED", "FALSE").upper() == "TRUE"
         )
         if file_writing_is_allowed:
             cls.__message_to_append_to_file = (
